@@ -1,0 +1,27 @@
+{
+  "General": {
+    "Hello": "Hallo",
+    "Test": "Test DE"
+  },
+  "Nav": {
+    "Headline": "CrowdSensing"
+  },
+  "Pages": {
+    "Database": {
+      "PageName": "Datenbank"
+    },
+    "Home": {
+      "Header": "Willkommen bei CrowdSensing",
+      "PageName": "Home"
+    },
+    "Map": {
+      "PageName": "Map"
+    },
+    "Template": {
+      "PageName": "Template"
+    },
+    "Test": {
+      "PageName": "Test"
+    }
+  }
+}

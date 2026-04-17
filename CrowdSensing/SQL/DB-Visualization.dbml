@@ -1,0 +1,73 @@
+// Page: https://dbdiagram.io/d
+// Docs: https://dbml.dbdiagram.io/docs
+// Link to Diagramm: https://dbdiagram.io/d/CrowdSensing-DB-69be6d17fb2db18e3bd09481 - Login with Google
+
+
+Project CrowdSensing {
+  note: "DBML schema for CrowdSensing-DB"
+}
+
+Table Department {
+  id integer [pk, increment, not null]
+  departmentName nvarchar(63) [not null]
+}
+
+Table User {
+  id integer [pk, increment, not null]
+  firstName nvarchar(100) [not null]
+  lastName nvarchar(100) [not null]
+  userName nvarchar(15) [not null, unique]
+  mail nvarchar(50) [not null, unique]
+  pw nvarchar(100) [not null]
+  Department integer
+}
+
+Table Operator {
+  id integer [pk, increment, not null]
+  firstName nvarchar(100) [not null]
+  lastName nvarchar(100) [not null]
+  Department integer [not null]
+  LastOperation datetime
+  g36 datetime
+}
+
+Table Operation {
+  id integer [pk, increment, not null]
+  operationName nvarchar(50)
+  location nvarchar(255)
+  dateTimeStart datetime [default: "date.now"]
+  dateTimeEnd datetime
+  pw nvarchar(100)
+  createdBy integer [not null]
+  isRunning bool [not null, default: TRUE]
+}
+
+Table OperationDepartment {
+  operation integer [pk]
+  department integer [pk]
+  isMain bool [not null, default: FALSE]
+}
+
+Table EventTypes {
+  id integer [pk, increment, not null]
+  eventTypeName nvarchar(63) [not null]
+  dataType nvarchar(8) [not null]
+}
+
+Table OperationEvent {
+  id integer [pk, increment, not null]
+  operationId integer [not null]
+  operatorId integer [not null]
+  eventType integer [not null]
+  eventData nvarchar(MAX)
+  eventDateTime datetime [not null]
+}
+
+Ref: User.Department > Department.id
+Ref: Operator.Department > Department.id
+Ref: Operation.createdBy > User.id
+Ref: OperationDepartment.operation > Operation.id
+Ref: OperationDepartment.department > Department.id
+Ref: OperationEvent.operationId > Operation.id
+Ref: OperationEvent.operatorId > Operator.id
+Ref: OperationEvent.eventType > EventTypes.id
