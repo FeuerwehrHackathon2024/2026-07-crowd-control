@@ -5,8 +5,8 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/btle_crowd_simulator /etc/btle-crowd-simulator/config.json
-WorkingDirectory=/etc/btle-crowd-simulator
+ExecStart=/usr/local/bin/btle_simulator /etc/btle-simulator/config.json
+WorkingDirectory=/etc/btle-simulator
 Restart=on-failure
 RestartSec=5
 
@@ -29,7 +29,7 @@ LockPersonality=true
 MemoryDenyWriteExecute=true
 
 # Config-Verzeichnis lesbar halten
-ReadOnlyPaths=/etc/btle-crowd-simulator
+ReadOnlyPaths=/etc/btle-simulator
 
 [Install]
 WantedBy=multi-user.target

@@ -29,7 +29,7 @@ Dauer **eines Ticks**. Alle Flüsse und Telegramme werden genau einmal pro Tick 
 
 | Wert | Effekt |
 |------|--------|
-| `5`  | Entspricht dem ESP32-Scanner — realistischer Standard |
+| `5`  | Realistischer Standard fuer typische Scan-Zyklen |
 | `< 5` | Höhere zeitliche Auflösung, mehr Last auf Backend |
 | `> 5` | Geringere Auflösung, glattere Kurven, weniger HTTP-Traffic |
 

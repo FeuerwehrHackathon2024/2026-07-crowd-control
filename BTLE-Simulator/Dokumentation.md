@@ -13,13 +13,12 @@ per HTTP POST an ein Backend meldet.
 > Management-Tests** - ohne dass reale ESP32-Scanner und reale Menschen
 > erforderlich sind.
 
-### Kompatibilitaet zum realen Scanner
+### JSON-Telegramm-Format
 
-Der Simulator sendet das **identische JSON-Telegramm** wie der reale
-ESP32/Raspberry-BTLE-Scanner (`senderType`, `deviceCount`, `lat`, `long`,
-`measureTime`). Das Backend kann simulierte und reale Sensoren nicht
-unterscheiden - was genau das gewuenschte Verhalten fuer Lasttests und
-End-to-End-Validierung ist.
+Das Telegramm enthaelt die Felder `lat`, `long`, `senderType`, `deviceCount`
+und `measureTime`. Das Backend kann simulierte und reale Sensoren anhand
+des Telegramms nicht unterscheiden — gewuenschtes Verhalten fuer Lasttests
+und End-to-End-Validierung.
 
 ---
 
@@ -180,7 +179,7 @@ Der Platzhalter `{sensor_id}` wird pro Sensor ersetzt.
 | `flow_rate`        | double | `[0.0 .. 1.0]` - Anteil der Population pro Tick |
 | `auto_growth`      | int    | Neue Einheiten pro Tick (nur SOURCE relevant) |
 
-Weitere Details und Wechselwirkungen: siehe **`CONFIG.md`** im selben Ordner.
+Weitere Details und Wechselwirkungen: siehe **`CONFIG.md`**.
 
 ---
 
@@ -241,12 +240,12 @@ sudo apt install build-essential libcurl4-openssl-dev nlohmann-json3-dev
 make
 ```
 
-Erzeugt das Binary `btle_crowd_simulator` im Projektordner.
+Erzeugt das Binary `btle_simulator` im Projektordner.
 
 ### 7.3. Lokal ausfuehren
 
 ```bash
-./btle_crowd_simulator config.json
+./btle_simulator config.json
 ```
 
 ### 7.4. Systemweit installieren (mit systemd-Service)
@@ -254,12 +253,12 @@ Erzeugt das Binary `btle_crowd_simulator` im Projektordner.
 ```bash
 sudo make install
 sudo systemctl daemon-reload
-sudo systemctl enable --now btle-crowd-simulator
+sudo systemctl enable --now btle-simulator
 ```
 
-- Binary: `/usr/local/bin/btle_crowd_simulator`
-- Config: `/etc/btle-crowd-simulator/config.json` (wird bei Re-Install nicht ueberschrieben)
-- Unit:   `/etc/systemd/system/btle-crowd-simulator.service`
+- Binary: `/usr/local/bin/btle_simulator`
+- Config: `/etc/btle-simulator/config.json` (wird bei Re-Install nicht ueberschrieben)
+- Unit:   `/etc/systemd/system/btle-simulator.service`
 
 ### 7.5. Deinstallation
 
@@ -267,14 +266,14 @@ sudo systemctl enable --now btle-crowd-simulator
 sudo make uninstall
 ```
 
-Config unter `/etc/btle-crowd-simulator` bleibt erhalten und muss bei
+Config unter `/etc/btle-simulator` bleibt erhalten und muss bei
 Bedarf manuell entfernt werden.
 
 ---
 
 ## 8. systemd-Service
 
-Die Unit `btle-crowd-simulator.service` laeuft unter `nobody:nogroup`
+Die Unit `btle-simulator.service` laeuft unter `nobody:nogroup`
 mit umfangreichem Sandboxing:
 
 - `ProtectSystem=strict` - kein Schreibzugriff auf System-Pfade
@@ -288,8 +287,8 @@ Neustart bei Crash nach 5 s (`Restart=on-failure`, `RestartSec=5`).
 ### Statuspruefung
 
 ```bash
-sudo systemctl status btle-crowd-simulator
-sudo journalctl -u btle-crowd-simulator -f
+sudo systemctl status btle-simulator
+sudo journalctl -u btle-simulator -f
 ```
 
 ---
@@ -348,7 +347,6 @@ Funktechnik. Weiterfuehrende Literatur:
   of Queues and their Analysis by the Method of the Imbedded Markov Chain.*
   Annals of Mathematical Statistics.
 
-Details und Bezug zu den Parametern: siehe `Technisches_Konzept_Simulator.md`.
 
 ---
 

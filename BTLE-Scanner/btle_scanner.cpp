@@ -40,7 +40,6 @@ static const uint16_t SCAN_INTERVAL = 0x0010; // 10 ms (N * 0.625ms)
 static const uint16_t SCAN_WINDOW   = 0x0010; // 10 ms
 
 // --- Telegramm-Metadaten ---
-static const int    SENDER_ID   = 0;
 static const double SENDER_LAT  = 0.0;
 static const double SENDER_LONG = 0.0;
 static const char*  SENDER_TYPE = "BTLE";
@@ -72,14 +71,13 @@ static bool post_count(size_t count) {
     char payload[512];
     snprintf(payload, sizeof(payload),
              "{"
-               "\"id\":%d,"
                "\"lat\":%.6f,"
                "\"long\":%.6f,"
                "\"senderType\":\"%s\","
                "\"deviceCount\":%zu,"
                "\"measureTime\":\"%s\""
              "}",
-             SENDER_ID, SENDER_LAT, SENDER_LONG,
+             SENDER_LAT, SENDER_LONG,
              SENDER_TYPE, count, measure_time);
 
     struct curl_slist* headers = nullptr;

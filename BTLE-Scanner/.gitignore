@@ -1,0 +1,16 @@
+# Compiled binary
+btle_scanner
+
+# Object files
+*.o
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

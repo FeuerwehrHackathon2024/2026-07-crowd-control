@@ -1,0 +1,16 @@
+# Compiled binary
+btle_simulator
+
+# Object files
+src/*.o
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

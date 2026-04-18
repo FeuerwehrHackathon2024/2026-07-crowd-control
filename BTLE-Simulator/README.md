@@ -1,10 +1,9 @@
 # BTLE-Crowd-Simulator
 
-C++-Implementierung nach `Technisches_Konzept_Simulator.md`.
+C++-Implementierung eines BTLE-Crowd-Simulators.
 Simuliert Personenströme über ein gerichtetes Sensor-Netz
 (SOURCE → TRANSIT → SINK) und sendet pro Tick ein JSON-Telegramm
-per HTTP-POST an ein Backend — **im identischen Format wie der
-reale BTLE-Scanner**.
+per HTTP-POST an ein Backend.
 
 ## Abhängigkeiten
 
@@ -34,12 +33,12 @@ make
 Ausführen:
 
 ```bash
-./btle_crowd_simulator config.json
+./btle_simulator config.json
 ```
 
 ## JSON-Telegramm
 
-Pro Tick sendet jeder Sensor folgendes Paket (identisch zum ESP32-Scanner):
+Pro Tick sendet jeder Sensor folgendes Paket:
 
 ```json
 {

@@ -3,7 +3,7 @@ CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic -Isrc
 LDFLAGS  ?=
 LDLIBS   ?= -lcurl -lpthread
 
-TARGET := btle_crowd_simulator
+TARGET := btle_simulator
 SRC    := src/main.cpp src/simulator.cpp src/config.cpp src/http_client.cpp
 OBJ    := $(SRC:.cpp=.o)
 
@@ -24,9 +24,9 @@ clean:
 # --- systemd Installation ---
 PREFIX    ?= /usr/local
 BINDIR    ?= $(PREFIX)/bin
-CONFDIR   ?= /etc/btle-crowd-simulator
+CONFDIR   ?= /etc/btle-simulator
 UNITDIR   ?= /etc/systemd/system
-UNIT      := btle-crowd-simulator.service
+UNIT      := btle-simulator.service
 
 install: $(TARGET)
 	install -d $(DESTDIR)$(BINDIR)

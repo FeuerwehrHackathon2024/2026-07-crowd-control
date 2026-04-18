@@ -47,7 +47,6 @@ Ein BTLE-Geraet sendet in einem 5-Sekunden-Fenster potenziell viele Advertising-
 
 ```json
 {
-  "id": 0,
   "lat": 0.000000,
   "long": 0.000000,
   "senderType": "BTLE",
@@ -60,7 +59,6 @@ Ein BTLE-Geraet sendet in einem 5-Sekunden-Fenster potenziell viele Advertising-
 
 | Feld | Typ | Beschreibung |
 |------|-----|-------------|
-| `id` | int | Eindeutige ID des Senders (Station) |
 | `lat` | double | Geografische Breite der Station (WGS84) |
 | `long` | double | Geografische Laenge der Station (WGS84) |
 | `senderType` | string | Fester Wert `"BTLE"` |
@@ -104,7 +102,7 @@ sudo systemctl enable --now bluetooth
 ### Build
 
 ```bash
-cd ESP32-BTLE-Scanner
+cd BTLE-Scanner
 make
 ```
 
@@ -144,7 +142,6 @@ static const char* SERVER_URL   = "http://deine-url.de/endpoint";
 static const int   SCAN_SECONDS = 5;
 static const int   HCI_DEV_ID   = 0;       // hci0
 
-static const int    SENDER_ID   = 0;
 static const double SENDER_LAT  = 0.0;
 static const double SENDER_LONG = 0.0;
 static const char*  SENDER_TYPE = "BTLE";
@@ -175,17 +172,13 @@ System-CAs werden aus `/etc/ssl/certs/` verwendet. Fuer Self-Signed-Zertifikate 
 ## 6. Verzeichnisstruktur
 
 ```
-ESP32-BTLE-Scanner/
+BTLE-Scanner/
 |-- Dokumentation.md             # diese Datei
 |-- Dokumentation.pdf            # diese Datei als PDF
-|-- Technisches_Konzept.md       # Design-Dokument
 |-- README.md                    # Kurzanleitung
-|
-`-- ESP32-BTLE-Scanner/          # Quellverzeichnis
-    |-- btle_scanner.cpp         # C++-Quelltext
-    |-- Makefile                 # Build-Regeln
-    |-- btle-scanner.service     # systemd-Unit
-    `-- README.md                # Build-Hinweise
+|-- btle_scanner.cpp             # C++-Quelltext
+|-- Makefile                     # Build-Regeln
+`-- btle-scanner.service         # systemd-Unit
 ```
 
 ---

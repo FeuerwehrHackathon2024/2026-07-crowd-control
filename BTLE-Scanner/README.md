@@ -28,7 +28,7 @@ hciconfig -a
 ## 3. Build
 
 ```bash
-cd raspi5
+cd BTLE-Scanner
 make
 ```
 
@@ -65,8 +65,11 @@ journalctl -u btle-scanner.service -f
 
 ```json
 {
-  "cycle_seconds": 5,
-  "count": 12
+  "lat": 0.000000,
+  "long": 0.000000,
+  "senderType": "BTLE",
+  "deviceCount": 12,
+  "measureTime": "2026-04-17T14:30:00Z"
 }
 ```
 
