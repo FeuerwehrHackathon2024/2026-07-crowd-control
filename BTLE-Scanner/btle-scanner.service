@@ -9,7 +9,7 @@ Type=simple
 ExecStart=/usr/local/bin/btle_scanner
 Restart=on-failure
 RestartSec=5
-# Laeuft ohne root dank setcap (siehe Makefile "install")
+# Runs without root thanks to setcap (see Makefile "install")
 User=nobody
 Group=nogroup
 AmbientCapabilities=CAP_NET_RAW CAP_NET_ADMIN

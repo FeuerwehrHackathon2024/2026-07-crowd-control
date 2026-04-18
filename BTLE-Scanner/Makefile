@@ -1,6 +1,6 @@
-# Makefile fuer btle_scanner (Raspberry Pi 5 / Debian)
+# Makefile for btle_scanner (Raspberry Pi 5 / Debian)
 #
-# Build-Abhaengigkeiten (einmalig):
+# Build dependencies (one-time):
 #   sudo apt update
 #   sudo apt install -y build-essential libbluetooth-dev libcurl4-openssl-dev
 
@@ -21,7 +21,7 @@ $(TARGET): $(SRC)
 clean:
 	rm -f $(TARGET)
 
-# HCI-Rechte ohne root: CAP_NET_RAW + CAP_NET_ADMIN am Binary setzen
+# HCI permissions without root: set CAP_NET_RAW + CAP_NET_ADMIN on the binary
 setcap: $(TARGET)
 	sudo setcap 'cap_net_raw,cap_net_admin+eip' $(TARGET)
 

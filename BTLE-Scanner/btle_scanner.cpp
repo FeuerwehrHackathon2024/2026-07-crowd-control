@@ -1,12 +1,12 @@
 /*
- * BTLE-Scanner mit HTTP-Bridge - Raspberry Pi 5 / Debian Portierung
+ * BTLE Scanner with HTTP Bridge - Raspberry Pi 5 / Debian port
  * -----------------------------------------------------------------
- * Scannt zyklisch per BlueZ HCI nach BTLE-Geraeten und sendet die
- * Anzahl der eindeutigen Stationen per HTTP POST an einen Webserver.
+ * Cyclically scans for BTLE devices via BlueZ HCI and sends the
+ * count of unique stations via HTTP POST to a web server.
  *
  * Build:   make
  * Deps:    libbluetooth-dev libcurl4-openssl-dev
- * Run:     sudo ./btle_scanner   (HCI braucht CAP_NET_RAW oder root)
+ * Run:     sudo ./btle_scanner   (HCI requires CAP_NET_RAW or root)
  */
 
 #include <bluetooth/bluetooth.h>
@@ -31,15 +31,15 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-// ============ KONFIGURATION ============
+// ============ CONFIGURATION ============
 static const char* SERVER_URL   = "http://deine-url.de/endpoint";
-static const int   SCAN_SECONDS = 5;     // Dauer eines Scan-Zyklus
+static const int   SCAN_SECONDS = 5;     // duration of one scan cycle
 static const int   HCI_DEV_ID   = 0;     // hci0
-static const bool  ACTIVE_SCAN  = true;  // true = Scan-Request senden
+static const bool  ACTIVE_SCAN  = true;  // true = send scan request
 static const uint16_t SCAN_INTERVAL = 0x0010; // 10 ms (N * 0.625ms)
 static const uint16_t SCAN_WINDOW   = 0x0010; // 10 ms
 
-// --- Telegramm-Metadaten ---
+// --- message metadata ---
 static const double SENDER_LAT  = 0.0;
 static const double SENDER_LONG = 0.0;
 static const char*  SENDER_TYPE = "BTLE";
@@ -61,7 +61,7 @@ static bool post_count(size_t count) {
         return false;
     }
 
-    // measureTime als ISO 8601 Datum/Zeit in UTC (z.B. "2026-04-17T14:30:00Z")
+    // measureTime as ISO 8601 date/time in UTC (e.g. "2026-04-17T14:30:00Z")
     char measure_time[32];
     std::time_t now = std::time(nullptr);
     std::tm tm_utc;
@@ -91,11 +91,11 @@ static bool post_count(size_t count) {
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
     // --- TLS / HTTPS ---
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L); // Zertifikat pruefen
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L); // Hostname pruefen
-    // Optional: eigene CA-Datei (z.B. fuer Self-Signed)
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L); // verify certificate
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L); // verify hostname
+    // Optional: custom CA file (e.g. for self-signed certs)
     // curl_easy_setopt(curl, CURLOPT_CAINFO, "/etc/ssl/certs/my_ca.crt");
-    // NUR fuer Tests mit Self-Signed - produktiv NICHT verwenden:
+    // FOR TESTING with self-signed only - do NOT use in production:
     // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
     // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
@@ -106,7 +106,7 @@ static bool post_count(size_t count) {
     if (res == CURLE_OK) {
         printf("[HTTP] %ld  <- %s\n", http_code, payload);
     } else {
-        fprintf(stderr, "[HTTP] Fehler: %s\n", curl_easy_strerror(res));
+        fprintf(stderr, "[HTTP] Error: %s\n", curl_easy_strerror(res));
     }
 
     curl_slist_free_all(headers);
@@ -123,14 +123,14 @@ public:
     bool open() {
         dev_id_ = HCI_DEV_ID;
 
-        // Adapter hochfahren, falls DOWN (behebt "Network is down")
+        // Bring adapter up if DOWN (fixes "Network is down")
         int ctl = socket(AF_BLUETOOTH, SOCK_RAW, BTPROTO_HCI);
         if (ctl >= 0) {
             if (ioctl(ctl, HCIDEVUP, dev_id_) < 0 && errno != EALREADY) {
                 fprintf(stderr, "[BLE] HCIDEVUP(hci%d): %s\n",
                         dev_id_, strerror(errno));
-                fprintf(stderr, "      Tipp: 'rfkill unblock bluetooth' "
-                                "und 'sudo systemctl stop bluetooth' probieren.\n");
+                fprintf(stderr, "      Tip: try 'rfkill unblock bluetooth' "
+                                "and 'sudo systemctl stop bluetooth'.\n");
                 ::close(ctl);
                 return false;
             }
@@ -143,10 +143,10 @@ public:
             return false;
         }
 
-        // Evtl. laufenden LE-Scan abbrechen (sonst schlaegt set_scan_parameters fehl)
+        // Cancel any running LE scan (otherwise set_scan_parameters fails)
         hci_le_set_scan_enable(sock_, 0x00, 0, 1000);
 
-        // Scan-Parameter setzen (LE passive/active scan, public address)
+        // Set scan parameters (LE passive/active scan, public address)
         if (hci_le_set_scan_parameters(
                 sock_,
                 ACTIVE_SCAN ? 0x01 : 0x00,
@@ -161,7 +161,7 @@ public:
         return true;
     }
 
-    // Scant scan_seconds lang, gibt Set eindeutiger MACs zurueck
+    // Scans for scan_seconds, returns set of unique MACs
     std::set<std::string> scan(int scan_seconds) {
         std::set<std::string> macs;
 
@@ -170,7 +170,7 @@ public:
             return macs;
         }
 
-        // HCI Event-Filter setzen
+        // Set HCI event filter
         struct hci_filter nf, of;
         socklen_t olen = sizeof(of);
         if (getsockopt(sock_, SOL_HCI, HCI_FILTER, &of, &olen) < 0) {
@@ -213,7 +213,7 @@ public:
             macs.insert(addr);
         }
 
-        // Scan stoppen & Filter restaurieren
+        // Stop scan & restore filter
         hci_le_set_scan_enable(sock_, 0x00, 1, 1000);
         setsockopt(sock_, SOL_HCI, HCI_FILTER, &of, sizeof(of));
         return macs;
@@ -241,16 +241,16 @@ int main() {
 
     BleScanner scanner;
     if (!scanner.open()) {
-        fprintf(stderr, "[BLE] HCI-Device konnte nicht geoeffnet werden.\n");
-        fprintf(stderr, "      Tipp: 'sudo ./btle_scanner' oder setcap-Rechte.\n");
+        fprintf(stderr, "[BLE] Could not open HCI device.\n");
+        fprintf(stderr, "      Tip: use 'sudo ./btle_scanner' or setcap permissions.\n");
         curl_global_cleanup();
         return 1;
     }
 
     while (g_running) {
-        printf("[SCAN] starte %d s ...\n", SCAN_SECONDS);
+        printf("[SCAN] starting %d s ...\n", SCAN_SECONDS);
         auto macs = scanner.scan(SCAN_SECONDS);
-        printf("[SCAN] fertig. Eindeutige Stationen: %zu\n", macs.size());
+        printf("[SCAN] done. Unique stations: %zu\n", macs.size());
 
         post_count(macs.size());
     }
