@@ -1,37 +1,37 @@
-# Crowd Control – Überblick
+# Crowd Control – Overview
 
-Dieses Repository enthält drei miteinander verbundene Teilprojekte zur Erfassung und Visualisierung von Personendichten über Bluetooth Low Energy (BTLE).
+This repository contains three interconnected sub-projects for capturing and visualising crowd densities using Bluetooth Low Energy (BTLE).
 
 ---
 
-## Teilprojekte
+## Sub-projects
 
 ### 1. [CrowdSensing](./CrowdSensing/)
 
-Webbasiertes System zur Verarbeitung und Darstellung von Sensordaten.
+Web-based system for processing and displaying sensor data.
 
-- **Backend** – ASP.NET Core Web API (C#), empfängt JSON-Telegramme von Sensoren und speichert sie in einer SQL-Datenbank
-- **Frontend** – React/TypeScript-SPA (Vite), zeigt eine interaktive Karte mit Heatmap und Gerätezahlen pro Sensor in Echtzeit
+- **Backend** – ASP.NET Core Web API (C#), receives JSON telegrams from sensors and stores them in a SQL database
+- **Frontend** – React/TypeScript SPA (Vite), displays an interactive map with heatmap and device counts per sensor in real time
 
 ### 2. [BTLE-Scanner](./BTLE-Scanner/)
 
-C++-Programm für den **Raspberry Pi 5** (Debian/Linux), das aktiv BTLE-Geräte in der Umgebung erfasst.
+C++ program for the **Raspberry Pi 5** (Debian/Linux) that actively scans for BTLE devices in the vicinity.
 
-- Nutzt das integrierte Bluetooth des Pi über **BlueZ HCI**
-- Sendet die Anzahl eindeutiger Geräte pro Messzyklus per **HTTP POST** als JSON an das CrowdSensing-Backend
-- Betrieb als **systemd-Service** möglich
+- Uses the Pi's integrated Bluetooth via **BlueZ HCI**
+- Sends the number of unique devices per measurement cycle via **HTTP POST** as JSON to the CrowdSensing backend
+- Can be operated as a **systemd service**
 
 ### 3. [BTLE-Simulator](./BTLE-Simulator/)
 
-C++-Programm, das einen realen Sensor-Verbund simuliert, um das Backend ohne Hardware testen zu können.
+C++ program that simulates a real sensor network to allow backend testing without hardware.
 
-- Modelliert Personenströme über ein gerichtetes Sensor-Netz (`SOURCE → TRANSIT → SINK`)
-- Konfigurierbar über `config.json` (Zeitplan, Kapazitäten, Flussraten)
-- Sendet taktgesteuert JSON-Telegramme per **HTTP POST** an das Backend
+- Models crowd flows through a directed sensor network (`SOURCE → TRANSIT → SINK`)
+- Configurable via `config.json` (schedule, capacities, flow rates)
+- Sends clock-driven JSON telegrams via **HTTP POST** to the backend
 
 ---
 
-## Zusammenspiel
+## System Interaction
 
 ```
 [BTLE-Scanner / BTLE-Simulator]
@@ -40,14 +40,14 @@ C++-Programm, das einen realen Sensor-Verbund simuliert, um das Backend ohne Har
    [CrowdSensing Backend]
           │  SQL
           ▼
-   [CrowdSensing Frontend]  ←  Browser (Karte + Heatmap)
+   [CrowdSensing Frontend]  ←  Browser (Map + Heatmap)
 ```
 
 ---
 
-## JSON-Telegramm (gemeinsames Format)
+## JSON Telegram (common format)
 
-Alle Sender (Scanner und Simulator) verwenden dasselbe Format:
+All senders (scanner and simulator) use the same format:
 
 ```json
 {
@@ -61,9 +61,9 @@ Alle Sender (Scanner und Simulator) verwenden dasselbe Format:
 
 ---
 
-## Schnellstart
+## Quick Start
 
-Detaillierte Installations- und Konfigurationsanleitungen befinden sich in den README-Dateien der jeweiligen Teilprojekte:
+Detailed installation and configuration guides are located in the README files of the respective sub-projects:
 
 - [`CrowdSensing/README.md`](./CrowdSensing/README.md)
 - [`BTLE-Scanner/README.md`](./BTLE-Scanner/README.md)

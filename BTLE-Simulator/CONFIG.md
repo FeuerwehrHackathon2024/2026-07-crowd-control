@@ -1,11 +1,11 @@
-# Konfigurationsreferenz: `config.json`
+# Configuration Reference: `config.json`
 
-Dieses Dokument beschreibt **jedes Feld** der `config.json` des BTLE-Crowd-Simulators
-und dessen Wirkung auf das Simulationsverhalten.
+This document describes **every field** of the `config.json` of the BTLE Crowd Simulator
+and its effect on simulation behaviour.
 
 ---
 
-## 1. Grundstruktur
+## 1. Basic Structure
 
 ```json
 {
@@ -14,92 +14,91 @@ und dessen Wirkung auf das Simulationsverhalten.
 }
 ```
 
-| Block | Zweck |
+| Block | Purpose |
 |-------|-------|
-| `simulation_control` | Globale Zeitsteuerung, Backend-URL, Phasenplan |
-| `sensors`            | Liste aller simulierten Sensoren mit Position, Kapazität und Rollenverhalten |
+| `simulation_control` | Global timing, backend URL, phase schedule |
+| `sensors` | List of all simulated sensors with position, capacity and role behaviour |
 
 ---
 
 ## 2. `simulation_control`
 
-### 2.1. `interval_sec` (Integer, Sekunden)
+### 2.1. `interval_sec` (Integer, seconds)
 
-Dauer **eines Ticks**. Alle Flüsse und Telegramme werden genau einmal pro Tick berechnet und gesendet.
+Duration of **one tick**. All flows and telegrams are calculated and sent exactly once per tick.
 
-| Wert | Effekt |
+| Value | Effect |
 |------|--------|
-| `5`  | Realistischer Standard fuer typische Scan-Zyklen |
-| `< 5` | Höhere zeitliche Auflösung, mehr Last auf Backend |
-| `> 5` | Geringere Auflösung, glattere Kurven, weniger HTTP-Traffic |
+| `5` | Realistic default for typical scan cycles |
+| `< 5` | Higher temporal resolution, more load on backend |
+| `> 5` | Lower resolution, smoother curves, less HTTP traffic |
 
-> **Wichtig:** Alle `travel_time_sec`-Werte werden intern in Ticks umgerechnet
-> (`ceil(travel_time_sec / interval_sec)`, mind. 1 Tick). Wer `interval_sec`
-> erhöht, verliert Auflösung in Transitzeiten.
+> **Important:** All `travel_time_sec` values are converted internally to ticks
+> (`ceil(travel_time_sec / interval_sec)`, minimum 1 tick). Increasing `interval_sec`
+> reduces transit time resolution.
 
 ### 2.2. `target_backend_url_template` (String)
 
-URL-Schablone, die pro Sensor durch Ersetzen von `{sensor_id}` zur konkreten
-Ziel-URL wird.
+URL template that becomes the concrete target URL per sensor by replacing `{sensor_id}`.
 
 ```json
-"target_backend_url_template": "https://api.dein-system.de/v1/sensors/{sensor_id}"
+"target_backend_url_template": "https://api.your-system.com/v1/sensors/{sensor_id}"
 ```
 
-| Wert | Effekt |
+| Value | Effect |
 |------|--------|
-| URL mit `{sensor_id}` | Jeder Sensor POSTed an eigene URL |
-| URL ohne Platzhalter  | Alle Sensoren senden an dieselbe URL (Backend muss aus anderem Kontext zuordnen) |
+| URL with `{sensor_id}` | Each sensor POSTs to its own URL |
+| URL without placeholder | All sensors send to the same URL (backend must identify from other context) |
 
-### 2.3. `timeline[]` (Array von Phasen)
+### 2.3. `timeline[]` (Array of phases)
 
-Sequentieller Ablaufplan. Die Simulation durchläuft die Phasen **in Reihenfolge** und
-terminiert danach. Jede Phase legt fest, welche Richtung (`forward`/`backward`) für
-alle Sensoren aktiv ist.
+Sequential execution plan. The simulation passes through the phases **in order** and
+terminates afterwards. Each phase specifies which direction (`forward`/`backward`) is
+active for all sensors.
 
 ```json
 "timeline": [
-  { "mode": "forward",  "duration_ticks": 120, "label": "Morgendlicher Einlass" },
-  { "mode": "backward", "duration_ticks": 120, "label": "Abendlicher Abfluss"   }
+  { "mode": "forward",  "duration_ticks": 120, "label": "Morning Entry" },
+  { "mode": "backward", "duration_ticks": 120, "label": "Evening Drain" }
 ]
 ```
 
-| Feld              | Typ    | Wirkung |
+| Field | Type | Effect |
 |-------------------|--------|---------|
-| `mode`            | String | `"forward"` → `forward`-Rolle jedes Sensors aktiv; `"backward"` → `backward`-Rolle |
-| `duration_ticks`  | Int    | Anzahl Ticks, die diese Phase läuft. Gesamtdauer in Sekunden = `duration_ticks × interval_sec` |
-| `label`           | String | Nur für Logging, keine Simulationswirkung |
+| `mode` | String | `"forward"` → `forward` role of each sensor active; `"backward"` → `backward` role |
+| `duration_ticks` | Int | Number of ticks this phase runs. Total duration in seconds = `duration_ticks × interval_sec` |
+| `label` | String | For logging only, no simulation effect |
 
-**Beispielrechnung:** `duration_ticks: 120` bei `interval_sec: 5` → 600 s = 10 Min.
+**Example calculation:** `duration_ticks: 120` at `interval_sec: 5` → 600 s = 10 min.
 
 ---
 
 ## 3. `sensors[]`
 
-Jeder Sensor repräsentiert einen Erfassungspunkt mit Position und zwei
-Verhaltensprofilen (für `forward`- und `backward`-Phase).
+Each sensor represents a detection point with position and two
+behaviour profiles (for `forward` and `backward` phase).
 
-### 3.1. Statische Felder
+### 3.1. Static Fields
 
-| Feld           | Typ    | Wirkung |
+| Field | Type | Effect |
 |----------------|--------|---------|
-| `id`           | String | Eindeutige ID; wird in URL (`{sensor_id}`) und `targets`-Referenzen anderer Sensoren verwendet |
-| `lat`          | Double | Breitengrad (WGS84) — nur fürs JSON-Telegramm, keine Flusswirkung |
-| `lon`          | Double | Längengrad (WGS84) — nur fürs JSON-Telegramm, keine Flusswirkung |
-| `max_capacity` | Int    | **Obergrenze** für `deviceCount`. Überschüssige Ankünfte werden abgeschnitten |
+| `id` | String | Unique ID; used in URL (`{sensor_id}`) and `targets` references of other sensors |
+| `lat` | Double | Latitude (WGS84) — for JSON telegram only, no flow effect |
+| `lon` | Double | Longitude (WGS84) — for JSON telegram only, no flow effect |
+| `max_capacity` | Int | **Upper limit** for `deviceCount`. Excess arrivals are discarded |
 
-#### Einfluss von `max_capacity`
+#### Effect of `max_capacity`
 
-- Wirkt als **harte Kappung**: nach jedem Ankommen aus der Transit-Queue und nach `auto_growth`
-  wird `current_count = min(current_count, max_capacity)`.
-- Simuliert physikalische Limits (z. B. Stadion fasst 2500 Personen).
-- **Wichtig:** Zu klein gewählt → Einheiten gehen "verloren" (Überlauf wird verworfen).
-  Zu groß → Kapazität bremst den Fluss nicht mehr ein.
+- Acts as a **hard cap**: after each arrival from the transit queue and after `auto_growth`,
+  `current_count = min(current_count, max_capacity)`.
+- Simulates physical limits (e.g. stadium capacity is 2500 persons).
+- **Important:** Too small → units are "lost" (overflow discarded).
+  Too large → capacity no longer throttles the flow.
 
-### 3.2. `forward` und `backward` (RoleConfig)
+### 3.2. `forward` and `backward` (RoleConfig)
 
-Jeder Sensor hat **zwei** Rollenkonfigurationen. Die `timeline` entscheidet pro
-Phase, welche aktiv ist. Beide Blöcke haben dieselbe Struktur:
+Each sensor has **two** role configurations. The `timeline` decides per
+phase which one is active. Both blocks have the same structure:
 
 ```json
 "forward": {
@@ -111,141 +110,141 @@ Phase, welche aktiv ist. Beide Blöcke haben dieselbe Struktur:
 }
 ```
 
-#### 3.2.1. `role` (String, Pflicht)
+#### 3.2.1. `role` (String, required)
 
-Bestimmt das Grundverhalten des Sensors in der jeweiligen Phase.
+Determines the fundamental behaviour of the sensor in the respective phase.
 
-| Rolle     | Pro Tick ausgeführt |
+| Role | Executed per tick |
 |-----------|---------------------|
-| `SOURCE`  | Erzeugt `auto_growth` neue Einheiten → sendet `flow_rate × current_count` an `targets` |
-| `TRANSIT` | Empfängt nur (über andere Sensoren) → sendet `flow_rate × current_count` weiter an `targets` |
-| `SINK`    | Empfängt nur → entfernt `flow_rate × current_count` (Austritt aus Erfassungsbereich) |
+| `SOURCE` | Creates `auto_growth` new units → sends `flow_rate × current_count` to `targets` |
+| `TRANSIT` | Receives only (from other sensors) → sends `flow_rate × current_count` to `targets` |
+| `SINK` | Receives only → removes `flow_rate × current_count` (exit from detection area) |
 
-#### 3.2.2. `targets` (Array von Sensor-IDs)
+#### 3.2.2. `targets` (Array of sensor IDs)
 
-Die Nachfolgersensoren, an die Outflow geht.
+The downstream sensors that receive outflow.
 
-| Wert                 | Effekt |
+| Value | Effect |
 |----------------------|--------|
-| `[]` (leer)          | Kein Outflow (Pflicht für `SINK`, bei `SOURCE`/`TRANSIT` wirkungslos) |
-| 1 ID                 | Gesamter Outflow geht an diesen Sensor |
-| Mehrere IDs          | Outflow wird **gleichmäßig aufgeteilt** (Rest-Einheiten auf erste Targets verteilt) |
+| `[]` (empty) | No outflow (required for `SINK`; harmless but pointless for `SOURCE`/`TRANSIT`) |
+| 1 ID | All outflow goes to this sensor |
+| Multiple IDs | Outflow is **evenly distributed** (remainder units distributed to first targets) |
 
-> Unbekannte Target-IDs werden stillschweigend ignoriert.
+> Unknown target IDs are silently ignored.
 
-#### 3.2.3. `travel_time_sec` (Int, Sekunden)
+#### 3.2.3. `travel_time_sec` (Int, seconds)
 
-Verzögerung zwischen Verlassen **dieses** Sensors und Ankunft beim Target.
-Intern wird in Ticks umgerechnet (`ceil(travel_time_sec / interval_sec)`, mind. 1).
+Delay between leaving **this** sensor and arriving at the target.
+Converted internally to ticks (`ceil(travel_time_sec / interval_sec)`, minimum 1).
 
-| Wert | Effekt |
+| Value | Effect |
 |------|--------|
-| `0`  | Ankunft im **nächsten** Tick (Minimum) |
-| `15`, `interval_sec=5` | 3 Ticks Verzögerung |
-| Sehr groß | Einheiten "stauen" in der Transit-Queue; Target füllt sich verzögert |
+| `0` | Arrival in the **next** tick (minimum) |
+| `15`, `interval_sec=5` | 3-tick delay |
+| Very large | Units "queue up" in the transit queue; target fills with a delay |
 
-**Im Transit sind Einheiten nicht sichtbar** — weder am Quell- noch am Ziel-Sensor. Sie tauchen erst bei Ankunft im `deviceCount` des Ziels auf.
+**Units in transit are not visible** — neither at the source nor at the target sensor. They only appear in the target's `deviceCount` on arrival.
 
 #### 3.2.4. `flow_rate` (Double, 0.0–1.0)
 
-**Anteil der aktuellen Population**, der pro Tick das Verhalten auslöst:
+**Fraction of the current population** that triggers the behaviour per tick:
 
-| Rolle     | Bedeutung der `flow_rate` |
+| Role | Meaning of `flow_rate` |
 |-----------|---------------------------|
-| `SOURCE`  | Abgang an `targets` pro Tick |
-| `TRANSIT` | Weitergabe an `targets` pro Tick |
-| `SINK`    | Entfernung aus Erfassungsbereich pro Tick |
+| `SOURCE` | Departure to `targets` per tick |
+| `TRANSIT` | Forwarding to `targets` per tick |
+| `SINK` | Removal from detection area per tick |
 
-| Wert     | Effekt |
+| Value | Effect |
 |----------|--------|
-| `0.0`    | Kein Fluss — Population bleibt konstant (bzw. wächst nur durch `auto_growth`) |
-| `0.10`   | 10 % der Population verlässt/wechselt pro Tick — langsamer Fluss |
-| `0.50`   | Hälfte pro Tick — rasanter Fluss, starkes Pulsieren |
-| `1.0`    | Komplette Population wechselt jeden Tick — kein Aufstauen möglich |
+| `0.0` | No flow — population stays constant (or only grows via `auto_growth`) |
+| `0.10` | 10 % of population leaves/moves per tick — slow flow |
+| `0.50` | Half per tick — rapid flow, strong pulsing |
+| `1.0` | Entire population moves every tick — no queuing possible |
 
-> Die Berechnung ist `floor(current_count × flow_rate)` — bei sehr kleinen Populationen (< 10)
-> und niedrigen Raten kann der Fluss auf 0 abrunden. → Mindestens `flow_rate ≥ 1/current_count`
-> wählen oder Population hochhalten.
+> The calculation is `floor(current_count × flow_rate)` — at very small populations (< 10)
+> and low rates, flow can round down to 0. → Choose at least `flow_rate ≥ 1/current_count`
+> or keep the population high.
 
-#### 3.2.5. `auto_growth` (Int, nur `SOURCE`)
+#### 3.2.5. `auto_growth` (Int, `SOURCE` only)
 
-Absolute Anzahl neuer Einheiten pro Tick. Wird **vor** dem Outflow addiert und
-danach auf `max_capacity` gekappt.
+Absolute number of new units per tick. Added **before** outflow and then
+capped at `max_capacity`.
 
-| Wert | Effekt |
+| Value | Effect |
 |------|--------|
-| `0`  | Keine Neugeneration (typisch für `TRANSIT`/`SINK`) |
-| `10` | 10 neue Geräte pro Tick — moderate Zustromrate |
-| `25` | Starker Zustrom (z. B. Großveranstaltung) |
+| `0` | No new generation (typical for `TRANSIT`/`SINK`) |
+| `10` | 10 new devices per tick — moderate inflow rate |
+| `25` | High inflow (e.g. large event) |
 
-> **Gleichgewicht:** Im Steady-State gilt `auto_growth ≈ flow_rate × current_count`,
-> die Population pendelt sich bei ca. `auto_growth / flow_rate` ein (vor `max_capacity`-Kappung).
-
----
-
-## 4. Wechselspiel der Parameter
-
-### 4.1. Steady-State eines SOURCE
-
-Ein SOURCE-Sensor erreicht bei stabilen Parametern eine Gleichgewichts-Population:
-
-```
-current_count_stable ≈ auto_growth / flow_rate   (gedeckelt durch max_capacity)
-```
-
-**Beispiel:** `auto_growth=10`, `flow_rate=0.20` → ca. 50 Geräte im Steady-State.
-
-### 4.2. Staueffekt im TRANSIT
-
-Wenn die Ankunftsrate (Outflow aller zeigender Vorgänger) größer ist als
-`flow_rate × max_capacity` des TRANSIT, entsteht ein Stau — bis die Kapazität
-hart greift und weitere Ankünfte verworfen werden.
-
-### 4.3. Drain-Balance im SINK
-
-Ein SINK wächst, solange Ankünfte > `flow_rate × current_count`. Bei
-`flow_rate=0.30` und konstanter Zulieferung von 20/Tick pendelt sich die SINK-
-Population bei ca. `20 / 0.30 ≈ 67` ein.
-
-### 4.4. Transit-Verzögerung vs. Phasenlänge
-
-Wenn `travel_time_sec` pro Hop hoch ist (z. B. 60 s bei `interval_sec=5` → 12 Ticks)
-und `duration_ticks` kurz (z. B. 30), erreichen die ersten Einheiten das Ende der
-Kette eventuell erst nach Phasenende. → Phasen immer **länger** als Summe aller
-Transit-Zeiten der Kette planen.
+> **Equilibrium:** In steady state `auto_growth ≈ flow_rate × current_count`,
+> the population stabilises at approximately `auto_growth / flow_rate` (before `max_capacity` cap).
 
 ---
 
-## 5. Beispielhafte Szenarien
+## 4. Parameter Interactions
 
-### 5.1. Sanfter Zustrom (Bürogebäude morgens)
+### 4.1. Steady State of a SOURCE
+
+A SOURCE sensor reaches an equilibrium population at stable parameters:
+
+```
+current_count_stable ≈ auto_growth / flow_rate   (capped by max_capacity)
+```
+
+**Example:** `auto_growth=10`, `flow_rate=0.20` → approx. 50 devices in steady state.
+
+### 4.2. Congestion Effect in TRANSIT
+
+If the arrival rate (outflow from all pointing predecessors) is greater than
+`flow_rate × max_capacity` of the TRANSIT, congestion builds — until the capacity
+hard-caps and further arrivals are discarded.
+
+### 4.3. Drain Balance in SINK
+
+A SINK grows as long as arrivals > `flow_rate × current_count`. At
+`flow_rate=0.30` and a constant supply of 20/tick, the SINK population
+stabilises at approx. `20 / 0.30 ≈ 67`.
+
+### 4.4. Transit Delay vs. Phase Length
+
+If `travel_time_sec` per hop is high (e.g. 60 s at `interval_sec=5` → 12 ticks)
+and `duration_ticks` is short (e.g. 30), the first units may only reach the end of
+the chain after the phase ends. → Always plan phases **longer** than the sum of all
+transit times along the chain.
+
+---
+
+## 5. Example Scenarios
+
+### 5.1. Gentle Inflow (Office Building, Morning)
 
 ```json
 "forward": { "role": "SOURCE", "targets": ["..."], "travel_time_sec": 30, "flow_rate": 0.05, "auto_growth": 3 }
 ```
-- Steady-State ~60 Personen, langsame Durchlaufzeit.
+- Steady state ~60 persons, slow throughput.
 
-### 5.2. Stoßartiger Einlass (Stadion)
+### 5.2. Burst Entry (Stadium)
 
 ```json
 "forward": { "role": "SOURCE", "targets": ["..."], "travel_time_sec": 10, "flow_rate": 0.30, "auto_growth": 50 }
 ```
-- Steady-State ~167 Personen, hoher Durchsatz.
+- Steady state ~167 persons, high throughput.
 
-### 5.3. Langsames Ausleeren (SINK)
+### 5.3. Slow Drain (SINK)
 
 ```json
 "backward": { "role": "SINK", "targets": [], "travel_time_sec": 0, "flow_rate": 0.10, "auto_growth": 0 }
 ```
-- Halbwertszeit ≈ 7 Ticks (`ln(2)/ln(1/0.9)`).
+- Half-life ≈ 7 ticks (`ln(2)/ln(1/0.9)`).
 
 ---
 
-## 6. Validierungs-Checkliste
+## 6. Validation Checklist
 
-- [ ] Jede ID in `targets` existiert als `sensor.id`.
-- [ ] `flow_rate` liegt im Intervall `[0.0, 1.0]`.
-- [ ] Für Rolle `SINK` ist `targets: []` (sonst wirkungslos, aber irreführend).
-- [ ] Für Rolle `SOURCE` ist `auto_growth > 0` (sonst versiegt die Quelle nach kurzer Zeit).
-- [ ] `max_capacity` > zu erwartender Peak.
-- [ ] `duration_ticks × interval_sec` > Summe aller `travel_time_sec` der längsten Kette.
+- [ ] Every ID in `targets` exists as a `sensor.id`.
+- [ ] `flow_rate` is in the interval `[0.0, 1.0]`.
+- [ ] For role `SINK`, `targets: []` (otherwise harmless but misleading).
+- [ ] For role `SOURCE`, `auto_growth > 0` (otherwise the source dries up quickly).
+- [ ] `max_capacity` > expected peak.
+- [ ] `duration_ticks × interval_sec` > sum of all `travel_time_sec` along the longest chain.

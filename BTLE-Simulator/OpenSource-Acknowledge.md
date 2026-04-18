@@ -1,23 +1,23 @@
 # Open Source Acknowledgements — BTLE-Simulator
 
-Dieses Projekt nutzt die folgenden Open-Source-Komponenten.
-Wir danken den jeweiligen Autoren und der Community für ihre Arbeit.
+This project uses the following open-source components.
+We thank the respective authors and the community for their work.
 
 ---
 
 ## nlohmann/json — JSON for Modern C++
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
 | Header | `<nlohmann/json.hpp>` |
 | Version | ≥ 3.x |
-| Lizenz | MIT License |
-| Webseite | <https://json.nlohmann.me/> |
-| Quellcode | <https://github.com/nlohmann/json> |
+| Licence | MIT License |
+| Website | <https://json.nlohmann.me/> |
+| Source | <https://github.com/nlohmann/json> |
 
-nlohmann/json wird für das Einlesen und Verarbeiten der Simulationskonfiguration (`config.json`) verwendet.
+nlohmann/json is used to read and process the simulation configuration (`config.json`).
 
-**Lizenztext:**
+**Licence text:**
 
 ```
 MIT License
@@ -46,17 +46,17 @@ THE SOFTWARE.
 
 ## libcurl
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Paket | `libcurl4-openssl-dev` |
-| Version | ≥ 7.x (Systempaket) |
-| Lizenz | curl License (MIT-ähnlich) |
-| Webseite | <https://curl.se/> |
-| Quellcode | <https://github.com/curl/curl> |
+| Package | `libcurl4-openssl-dev` |
+| Version | ≥ 7.x (system package) |
+| Licence | curl License (MIT-like) |
+| Website | <https://curl.se/> |
+| Source | <https://github.com/curl/curl> |
 
-libcurl wird verwendet, um simulierte Sensordaten per HTTP POST asynchron an den Backend-Server zu übertragen.
+libcurl is used to transmit simulated sensor data asynchronously via HTTP POST to the backend server.
 
-**Lizenztext (Auszug):**
+**Licence text (excerpt):**
 
 ```
 COPYRIGHT AND PERMISSION NOTICE
@@ -67,48 +67,48 @@ with or without fee is hereby granted, provided that the above copyright
 notice and this permission notice appear in all copies.
 ```
 
-Vollständiger Lizenztext: <https://curl.se/docs/copyright.html>
+Full licence text: <https://curl.se/docs/copyright.html>
 
 ---
 
 ## OpenSSL
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Paket | `libssl-dev` (Abhängigkeit von libcurl4-openssl-dev) |
-| Version | ≥ 3.x (Systempaket) |
-| Lizenz | Apache License 2.0 |
-| Webseite | <https://www.openssl.org/> |
-| Quellcode | <https://github.com/openssl/openssl> |
+| Package | `libssl-dev` (dependency of libcurl4-openssl-dev) |
+| Version | ≥ 3.x (system package) |
+| Licence | Apache License 2.0 |
+| Website | <https://www.openssl.org/> |
+| Source | <https://github.com/openssl/openssl> |
 
-OpenSSL stellt die TLS/SSL-Unterstützung für verschlüsselte HTTPS-Verbindungen bereit.
+OpenSSL provides TLS/SSL support for encrypted HTTPS connections.
 
-Vollständiger Lizenztext: <https://www.openssl.org/source/license.html>
+Full licence text: <https://www.openssl.org/source/license.html>
 
 ---
 
 ## GNU C++ Standard Library (libstdc++)
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Teil von | GCC (GNU Compiler Collection) |
-| Lizenz | GPL-3.0 mit GCC Runtime Library Exception |
-| Webseite | <https://gcc.gnu.org/> |
-| Quellcode | <https://gcc.gnu.org/git.html> |
+| Part of | GCC (GNU Compiler Collection) |
+| Licence | GPL-3.0 with GCC Runtime Library Exception |
+| Website | <https://gcc.gnu.org/> |
+| Source | <https://gcc.gnu.org/git.html> |
 
-Die C++17 Standard-Bibliothek (`<thread>`, `<atomic>`, `<chrono>`, `<fstream>`, `<string>` u. a.) wird als Teil des GCC-Toolchain verwendet.
+The C++17 standard library (`<thread>`, `<atomic>`, `<chrono>`, `<fstream>`, `<string>` etc.) is used as part of the GCC toolchain.
 
 ---
 
 ## Linux Kernel POSIX APIs
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Lizenz | GPL-2.0 with Linux-syscall-note |
-| Webseite | <https://kernel.org/> |
+| Licence | GPL-2.0 with Linux-syscall-note |
+| Website | <https://kernel.org/> |
 
-Der Simulator verwendet Standard-POSIX-Systemaufrufe (`signal`, POSIX-Threads via `<thread>`) für die asynchrone HTTP-Übertragung und Signalbehandlung.
+The simulator uses standard POSIX system calls (`signal`, POSIX threads via `<thread>`) for asynchronous HTTP transmission and signal handling.
 
 ---
 
-*Erstellt am 2026-04-18 — BTLE-Simulator v1.0*
+*Created on 2026-04-18 — BTLE-Simulator v1.0*

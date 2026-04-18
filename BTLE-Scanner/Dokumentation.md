@@ -1,49 +1,49 @@
-# BTLE-Scanner — Projektdokumentation
+# BTLE-Scanner — Project Documentation
 
 **Version:** 1.0
-**Datum:** 2026-04-17
-**Zielplattform:** Raspberry Pi 5 (Debian, C++)
+**Date:** 2026-04-17
+**Target Platform:** Raspberry Pi 5 (Debian, C++)
 
 ---
 
-## 1. Projektueberblick
+## 1. Project Overview
 
-Der BTLE-Scanner erfasst die Anzahl eindeutiger Bluetooth-Low-Energy-Stationen in einem definierten Messzyklus und uebertraegt das Ergebnis per HTTP(S) POST als JSON an einen Webserver.
+The BTLE-Scanner captures the number of unique Bluetooth Low Energy stations within a defined measurement cycle and transmits the result via HTTP(S) POST as JSON to a web server.
 
-### Ziel
-Erfassung der Anzahl von BTLE-Stationen pro Messzyklus — nicht mehr, nicht weniger.
+### Goal
+Capture the number of BTLE stations per measurement cycle — nothing more, nothing less.
 
-### Komponenten
+### Components
 
-| Datei | Zweck |
+| File | Purpose |
 |-------|-------|
-| `btle_scanner.cpp` | C++-Quelltext (BlueZ HCI + libcurl) |
-| `Makefile` | Build-Regeln fuer Debian |
-| `btle-scanner.service` | systemd-Unit fuer Autostart |
-| `README.md` | Kurzanleitung |
+| `btle_scanner.cpp` | C++ source code (BlueZ HCI + libcurl) |
+| `Makefile` | Build rules for Debian |
+| `btle-scanner.service` | systemd unit for autostart |
+| `README.md` | Quick-start guide |
 
 ---
 
-## 2. Architektur & Funktionsablauf
+## 2. Architecture & Functional Flow
 
-Die Implementierung folgt einem sequenziellen Ablauf. Dadurch werden Hardware- und Stack-Konflikte zwischen BLE-Scan und HTTP-Upload vermieden.
+The implementation follows a sequential flow, avoiding hardware and stack conflicts between BLE scanning and HTTP upload.
 
-| Phase | Beschreibung |
+| Phase | Description |
 |-------|-------------|
-| 1. Initialisierung | HCI-Adapter hochfahren, Scan-Parameter setzen |
-| 2. Scan-Phase | BLE-Scan fuer `SCAN_SECONDS` — eindeutige MACs sammeln |
-| 3. Zaehl-Phase | Anzahl eindeutiger MAC-Adressen ermitteln |
-| 4. Sende-Phase | HTTP(S) POST mit JSON-Telegramm absetzen |
-| 5. Reset | Speicher leeren, neuer Zyklus |
+| 1. Initialisation | Bring up HCI adapter, set scan parameters |
+| 2. Scan Phase | BLE scan for `SCAN_SECONDS` — collect unique MACs |
+| 3. Count Phase | Determine the number of unique MAC addresses |
+| 4. Send Phase | Issue HTTP(S) POST with JSON telegram |
+| 5. Reset | Clear memory, start new cycle |
 
-### Duplikat-Vermeidung
-Ein BTLE-Geraet sendet in einem 5-Sekunden-Fenster potenziell viele Advertising-Pakete. Durch Verwendung eines `std::set<std::string>` wird jede MAC-Adresse nur einmal gezaehlt.
+### Duplicate Avoidance
+A BTLE device may send many advertising packets within a 5-second window. By using a `std::set<std::string>`, each MAC address is counted only once.
 
 ---
 
-## 3. JSON-Telegramm
+## 3. JSON Telegram
 
-### Payload-Struktur
+### Payload Structure
 
 ```json
 {
@@ -55,35 +55,35 @@ Ein BTLE-Geraet sendet in einem 5-Sekunden-Fenster potenziell viele Advertising-
 }
 ```
 
-### Felder
+### Fields
 
-| Feld | Typ | Beschreibung |
+| Field | Type | Description |
 |------|-----|-------------|
-| `lat` | double | Geografische Breite der Station (WGS84) |
-| `long` | double | Geografische Laenge der Station (WGS84) |
-| `senderType` | string | Fester Wert `"BTLE"` |
-| `deviceCount` | int | Anzahl eindeutiger BTLE-Stationen im Zyklus |
-| `measureTime` | string | ISO 8601 Zeitstempel in UTC (`YYYY-MM-DDTHH:MM:SSZ`) |
+| `lat` | double | Geographic latitude of the station (WGS84) |
+| `long` | double | Geographic longitude of the station (WGS84) |
+| `senderType` | string | Fixed value `"BTLE"` |
+| `deviceCount` | int | Number of unique BTLE stations in the cycle |
+| `measureTime` | string | ISO 8601 timestamp in UTC (`YYYY-MM-DDTHH:MM:SSZ`) |
 
-### HTTP-Request
+### HTTP Request
 
 ```
 POST /endpoint HTTP/1.1
-Host: deine-url.de
+Host: your-server.com
 Content-Type: application/json
 ```
 
 ---
 
-## 4. Raspberry Pi 5 Implementierung (Debian)
+## 4. Raspberry Pi 5 Implementation (Debian)
 
-### Systemvoraussetzungen
+### System Requirements
 
-- Debian 12 (Bookworm) 64-bit oder Raspberry Pi OS
-- Integriertes Bluetooth des Pi 5 oder externer Dongle
-- Netzwerkverbindung zum Zielserver
+- Debian 12 (Bookworm) 64-bit or Raspberry Pi OS
+- Pi 5 integrated Bluetooth or external dongle
+- Network connectivity to the target server
 
-### Paket-Installation
+### Package Installation
 
 ```bash
 sudo apt update
@@ -106,28 +106,28 @@ cd BTLE-Scanner
 make
 ```
 
-Das `Makefile` nutzt:
+The `Makefile` uses:
 - Compiler: `g++`
 - Flags: `-O2 -Wall -Wextra -std=c++17`
 - Libs: `-lbluetooth -lcurl`
 
-### Berechtigungen
+### Permissions
 
-Der HCI-Zugriff erfordert `CAP_NET_RAW` + `CAP_NET_ADMIN`:
+HCI access requires `CAP_NET_RAW` + `CAP_NET_ADMIN`:
 
 ```bash
-# Variante A: mit sudo
+# Option A: with sudo
 sudo ./btle_scanner
 
-# Variante B: Capabilities am Binary setzen (einmalig)
+# Option B: set capabilities on the binary (once)
 make setcap
 ./btle_scanner
 ```
 
-### Installation als systemd-Service
+### Install as systemd Service
 
 ```bash
-make install                                      # nach /usr/local/bin
+make install                                      # to /usr/local/bin
 sudo cp btle-scanner.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now btle-scanner.service
@@ -135,10 +135,10 @@ systemctl status btle-scanner.service
 journalctl -u btle-scanner.service -f
 ```
 
-### Konfiguration im Code
+### Code Configuration
 
 ```cpp
-static const char* SERVER_URL   = "http://deine-url.de/endpoint";
+static const char* SERVER_URL   = "http://your-server.com/endpoint";
 static const int   SCAN_SECONDS = 5;
 static const int   HCI_DEV_ID   = 0;       // hci0
 
@@ -149,74 +149,74 @@ static const char*  SENDER_TYPE = "BTLE";
 
 ---
 
-## 5. HTTPS-Unterstuetzung
+## 5. HTTPS Support
 
-libcurl ist mit OpenSSL gebaut — HTTPS funktioniert durch blosse URL-Aenderung.
+libcurl is built with OpenSSL — HTTPS works by simply changing the URL.
 
 ```cpp
-static const char* SERVER_URL = "https://deine-url.de/endpoint";
+static const char* SERVER_URL = "https://your-server.com/endpoint";
 ```
 
-### TLS-Optionen
+### TLS Options
 
-| Option | Wert | Bedeutung |
+| Option | Value | Meaning |
 |--------|------|-----------|
-| `CURLOPT_SSL_VERIFYPEER` | 1 | Zertifikat validieren |
-| `CURLOPT_SSL_VERIFYHOST` | 2 | Hostname pruefen |
-| `CURLOPT_CAINFO` | Pfad | Optional: eigene CA-Datei |
+| `CURLOPT_SSL_VERIFYPEER` | 1 | Validate certificate |
+| `CURLOPT_SSL_VERIFYHOST` | 2 | Check hostname |
+| `CURLOPT_CAINFO` | Path | Optional: custom CA file |
 
-System-CAs werden aus `/etc/ssl/certs/` verwendet. Fuer Self-Signed-Zertifikate eigene CA-Datei nachladen.
+System CAs are used from `/etc/ssl/certs/`. Load a custom CA file for self-signed certificates.
 
 ---
 
-## 6. Verzeichnisstruktur
+## 6. Directory Structure
 
 ```
 BTLE-Scanner/
-|-- Dokumentation.md             # diese Datei
-|-- Dokumentation.pdf            # diese Datei als PDF
-|-- README.md                    # Kurzanleitung
-|-- btle_scanner.cpp             # C++-Quelltext
-|-- Makefile                     # Build-Regeln
-`-- btle-scanner.service         # systemd-Unit
+|-- Dokumentation.md             # this file
+|-- Dokumentation.pdf            # this file as PDF
+|-- README.md                    # quick-start guide
+|-- btle_scanner.cpp             # C++ source code
+|-- Makefile                     # build rules
+`-- btle-scanner.service         # systemd unit
 ```
 
 ---
 
 ## 7. Troubleshooting
 
-| Problem | Ursache | Loesung |
+| Problem | Cause | Solution |
 |--------|---------|---------|
-| `hci_open_dev: Permission denied` | fehlende Rechte | `sudo` oder `make setcap` |
-| `hci_open_dev: No such device` | Adapter nicht da | `hciconfig hci0 up` |
-| `Network is down` | hci0 DOWN oder rfkill-Block | `rfkill unblock bluetooth` + `hciconfig hci0 up` |
-| Bluetooth nicht installiert | Pakete fehlen | `sudo apt install bluez libbluetooth-dev ...` |
-| `SSL certificate problem` | CA-Store fehlt | `sudo update-ca-certificates` |
-| Immer 0 Geraete | `bluetoothctl` blockiert HCI | `bluetoothctl exit` und `systemctl stop bluetooth` probeweise |
-| `EALREADY` beim HCIDEVUP | Adapter bereits aktiv | kein Fehler — wird im Code ignoriert |
-| Hostname nicht aufloesbar | DNS-Problem | `ping deine-url.de` |
+| `hci_open_dev: Permission denied` | missing privileges | `sudo` or `make setcap` |
+| `hci_open_dev: No such device` | adapter not present | `hciconfig hci0 up` |
+| `Network is down` | hci0 DOWN or rfkill block | `rfkill unblock bluetooth` + `hciconfig hci0 up` |
+| Bluetooth not installed | packages missing | `sudo apt install bluez libbluetooth-dev ...` |
+| `SSL certificate problem` | CA store missing | `sudo update-ca-certificates` |
+| Always 0 devices | `bluetoothctl` blocks HCI | `bluetoothctl exit` and try `systemctl stop bluetooth` |
+| `EALREADY` on HCIDEVUP | adapter already active | not an error — ignored in code |
+| Hostname not resolvable | DNS problem | `ping your-server.com` |
 
 ---
 
-## 8. Erweiterungs-Moeglichkeiten
+## 8. Extension Possibilities
 
-- Differenzierung nach BTLE-Adresstyp (Public/Random) als zusaetzliche Zaehler
-- Erkennung von iBeacon / Eddystone via Parsing der Advertising-Daten
-- Lokaler Puffer und Retry bei HTTP-Fehlern
-- Konfiguration zur Laufzeit (z.B. per `config.json` oder Umgebungsvariablen)
-- Batch-Versand statt Einzel-POST
+- Differentiation by BTLE address type (Public/Random) as additional counters
+- Detection of iBeacon / Eddystone via parsing of advertising data
+- Local buffer and retry on HTTP errors
+- Runtime configuration (e.g. via `config.json` or environment variables)
+- Batch sending instead of individual POSTs
 
 ---
 
-## 9. Quellenhinweise
+## 9. References
 
-| Thema | Referenz |
+| Topic | Reference |
 |-------|----------|
 | BlueZ HCI API | `man hci` / `/usr/include/bluetooth/` |
 | libcurl | https://curl.se/libcurl/c/ |
 | JSON | RFC 8259 |
-| ISO 8601 (Zeit) | ISO 8601-1:2019 |
+| ISO 8601 (time) | ISO 8601-1:2019 |
 
 ---
 
-*Ende der Dokumentation.*
+*End of documentation.*

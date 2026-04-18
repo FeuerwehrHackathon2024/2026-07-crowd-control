@@ -1,37 +1,37 @@
 # Open Source Acknowledgements — BTLE-Scanner
 
-Dieses Projekt nutzt die folgenden Open-Source-Komponenten.
-Wir danken den jeweiligen Autoren und der Community für ihre Arbeit.
+This project uses the following open-source components.
+We thank the respective authors and the community for their work.
 
 ---
 
 ## BlueZ — Linux Bluetooth Protocol Stack
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Paket | `libbluetooth-dev` |
-| Version | ≥ 5.x (Systempaket) |
-| Lizenz | GNU General Public License v2.0 (GPL-2.0) |
-| Webseite | <http://www.bluez.org/> |
-| Quellcode | <https://git.kernel.org/pub/scm/bluetooth/bluez.git> |
+| Package | `libbluetooth-dev` |
+| Version | ≥ 5.x (system package) |
+| Licence | GNU General Public License v2.0 (GPL-2.0) |
+| Website | <http://www.bluez.org/> |
+| Source | <https://git.kernel.org/pub/scm/bluetooth/bluez.git> |
 
-BlueZ ist der offizielle Linux Bluetooth-Stack und stellt die HCI-API bereit, über die der BTLE-Scanner Bluetooth-Low-Energy-Werbepakete empfängt.
+BlueZ is the official Linux Bluetooth stack and provides the HCI API through which the BTLE-Scanner receives Bluetooth Low Energy advertising packets.
 
 ---
 
 ## libcurl
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Paket | `libcurl4-openssl-dev` |
-| Version | ≥ 7.x (Systempaket) |
-| Lizenz | curl License (MIT-ähnlich) |
-| Webseite | <https://curl.se/> |
-| Quellcode | <https://github.com/curl/curl> |
+| Package | `libcurl4-openssl-dev` |
+| Version | ≥ 7.x (system package) |
+| Licence | curl License (MIT-like) |
+| Website | <https://curl.se/> |
+| Source | <https://github.com/curl/curl> |
 
-libcurl wird verwendet, um die gemessene Geräteanzahl per HTTP POST an den Backend-Server zu übertragen.
+libcurl is used to transmit the measured device count via HTTP POST to the backend server.
 
-**Lizenztext (Auszug):**
+**Licence text (excerpt):**
 
 ```
 COPYRIGHT AND PERMISSION NOTICE
@@ -42,48 +42,48 @@ with or without fee is hereby granted, provided that the above copyright
 notice and this permission notice appear in all copies.
 ```
 
-Vollständiger Lizenztext: <https://curl.se/docs/copyright.html>
+Full licence text: <https://curl.se/docs/copyright.html>
 
 ---
 
 ## OpenSSL
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Paket | `libssl-dev` (Abhängigkeit von libcurl4-openssl-dev) |
-| Version | ≥ 3.x (Systempaket) |
-| Lizenz | Apache License 2.0 |
-| Webseite | <https://www.openssl.org/> |
-| Quellcode | <https://github.com/openssl/openssl> |
+| Package | `libssl-dev` (dependency of libcurl4-openssl-dev) |
+| Version | ≥ 3.x (system package) |
+| Licence | Apache License 2.0 |
+| Website | <https://www.openssl.org/> |
+| Source | <https://github.com/openssl/openssl> |
 
-OpenSSL stellt die TLS/SSL-Unterstützung für verschlüsselte HTTPS-Verbindungen bereit.
+OpenSSL provides TLS/SSL support for encrypted HTTPS connections.
 
-Vollständiger Lizenztext: <https://www.openssl.org/source/license.html>
+Full licence text: <https://www.openssl.org/source/license.html>
 
 ---
 
 ## GNU C++ Standard Library (libstdc++)
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Teil von | GCC (GNU Compiler Collection) |
-| Lizenz | GPL-3.0 mit GCC Runtime Library Exception |
-| Webseite | <https://gcc.gnu.org/> |
-| Quellcode | <https://gcc.gnu.org/git.html> |
+| Part of | GCC (GNU Compiler Collection) |
+| Licence | GPL-3.0 with GCC Runtime Library Exception |
+| Website | <https://gcc.gnu.org/> |
+| Source | <https://gcc.gnu.org/git.html> |
 
-Die C++17 Standard-Bibliothek (`<thread>`, `<atomic>`, `<chrono>`, `<set>`, `<string>` u. a.) wird als Teil des GCC-Toolchain verwendet.
+The C++17 standard library (`<thread>`, `<atomic>`, `<chrono>`, `<set>`, `<string>` etc.) is used as part of the GCC toolchain.
 
 ---
 
 ## Linux Kernel POSIX APIs
 
-| Eigenschaft | Wert |
+| Property | Value |
 |---|---|
-| Lizenz | GPL-2.0 with Linux-syscall-note |
-| Webseite | <https://kernel.org/> |
+| Licence | GPL-2.0 with Linux-syscall-note |
+| Website | <https://kernel.org/> |
 
-Der Scanner verwendet POSIX-Sockets (`AF_BLUETOOTH`, `SOCK_RAW`) sowie Standard-POSIX-Systemaufrufe (`ioctl`, `read`, `signal`).
+The scanner uses POSIX sockets (`AF_BLUETOOTH`, `SOCK_RAW`) and standard POSIX system calls (`ioctl`, `read`, `signal`).
 
 ---
 
-*Erstellt am 2026-04-18 — BTLE-Scanner v1.0*
+*Created on 2026-04-18 — BTLE-Scanner v1.0*

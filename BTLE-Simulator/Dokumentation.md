@@ -1,105 +1,101 @@
-# BTLE-Crowd-Simulator - Dokumentation
+# BTLE Crowd Simulator - Documentation
 
-## 1. Projektueberblick
+## 1. Project Overview
 
-Der **BTLE-Crowd-Simulator** ist eine C++17-Anwendung, die realistische
-Personenstroeme ueber ein gerichtetes Sensor-Netz simuliert und die
-resultierenden "detected device"-Zaehlungen pro Sensor und Zeitintervall
-per HTTP POST an ein Backend meldet.
+The **BTLE Crowd Simulator** is a C++17 application that simulates realistic
+crowd flows through a directed sensor network and reports the resulting
+"detected device" counts per sensor and time interval
+via HTTP POST to a backend.
 
-### Ziel
+### Goal
 
-> **Erzeugung realistischer BTLE-Telemetrie fuer Backend- und Crowd-
-> Management-Tests** - ohne dass reale ESP32-Scanner und reale Menschen
-> erforderlich sind.
+> **Generate realistic BTLE telemetry for backend and crowd management tests**
+> — without requiring real ESP32 scanners or real people.
 
-### JSON-Telegramm-Format
+### JSON Telegram Format
 
-Das Telegramm enthaelt die Felder `lat`, `long`, `senderType`, `deviceCount`
-und `measureTime`. Das Backend kann simulierte und reale Sensoren anhand
-des Telegramms nicht unterscheiden — gewuenschtes Verhalten fuer Lasttests
-und End-to-End-Validierung.
+The telegram contains the fields `lat`, `long`, `senderType`, `deviceCount`
+and `measureTime`. The backend cannot distinguish simulated from real sensors
+based on the telegram — the desired behaviour for load tests and end-to-end validation.
 
 ---
 
-## 2. Architektur
+## 2. Architecture
 
 ```
-main.cpp          Einstieg, Signal-Handling (SIGINT/SIGTERM)
-config.cpp/h      JSON-Parser (nlohmann/json) -> SimulationConfig
-simulator.cpp/h   Tick-Loop, Rollenlogik, Transit-Warteschlangen
-http_client.cpp/h libcurl-Wrapper, asynchroner POST via std::thread::detach
-types.h           Datenstrukturen (Sensor, RoleConfig, TimelinePhase)
+main.cpp          Entry point, signal handling (SIGINT/SIGTERM)
+config.cpp/h      JSON parser (nlohmann/json) -> SimulationConfig
+simulator.cpp/h   Tick loop, role logic, transit queues
+http_client.cpp/h libcurl wrapper, async POST via std::thread::detach
+types.h           Data structures (Sensor, RoleConfig, TimelinePhase)
 ```
 
-### Abhaengigkeiten
+### Dependencies
 
-| Komponente        | Paket (Debian/Raspberry Pi OS)    |
+| Component | Package (Debian/Raspberry Pi OS) |
 |-------------------|-----------------------------------|
-| C++17-Compiler    | `build-essential`                 |
-| HTTP-Client       | `libcurl4-openssl-dev`            |
-| JSON-Parser       | `nlohmann-json3-dev`              |
-| Threading         | pthread (Teil von glibc)          |
+| C++17 compiler | `build-essential` |
+| HTTP client | `libcurl4-openssl-dev` |
+| JSON parser | `nlohmann-json3-dev` |
+| Threading | pthread (part of glibc) |
 
 ---
 
-## 3. Simulationsmodell
+## 3. Simulation Model
 
-### 3.1. Diskrete Zeit (Ticks)
+### 3.1. Discrete Time (Ticks)
 
-Die Simulation arbeitet in festen Zeitschritten (`interval_sec`, Standard
-5 s). In jedem Tick wird fuer **alle** Sensoren:
+The simulation operates in fixed time steps (`interval_sec`, default 5 s).
+Each tick performs for **all** sensors:
 
-1. Ankommende Einheiten aus der Transit-Warteschlange uebernommen
-2. Rollenverhalten (SOURCE / TRANSIT / SINK) angewandt
-3. Ein JSON-Telegramm an das Backend gesendet
+1. Accept incoming units from the transit queue
+2. Apply role behaviour (SOURCE / TRANSIT / SINK)
+3. Send a JSON telegram to the backend
 
-### 3.2. Rollen
+### 3.2. Roles
 
-| Rolle     | Wirkung pro Tick                                                                 |
+| Role | Effect per tick |
 |-----------|----------------------------------------------------------------------------------|
-| `SOURCE`  | `auto_growth` neue Einheiten + `flow_rate x current_count` an `targets` |
-| `TRANSIT` | `flow_rate x current_count` weiter an `targets` (Durchgangspunkt) |
-| `SINK`    | `flow_rate x current_count` wird entfernt (Austritt aus Erfassungsbereich) |
+| `SOURCE` | `auto_growth` new units + `flow_rate x current_count` to `targets` |
+| `TRANSIT` | `flow_rate x current_count` forwarded to `targets` (pass-through) |
+| `SINK` | `flow_rate x current_count` removed (exit from detection area) |
 
-Jeder Sensor definiert **zwei** Rollen: eine fuer `forward`, eine fuer
-`backward`. Welche aktiv ist, steuert die `timeline`.
+Each sensor defines **two** roles: one for `forward`, one for
+`backward`. The active one is controlled by the `timeline`.
 
-### 3.3. Transit-Warteschlange
+### 3.3. Transit Queue
 
-Verlaesst eine Einheit Sensor A in Richtung B, verschwindet sie aus A
-**sofort** und erscheint nach `travel_time_sec` in B. Die Zwischenzeit
-verbringt sie in B's `incoming`-Queue (std::deque) - ohne dass sie an
-irgendeinem Sensor sichtbar ist.
+When a unit leaves sensor A towards B, it disappears from A
+**immediately** and appears in B after `travel_time_sec`. During transit
+it resides in B's `incoming` queue (std::deque) — not visible at any sensor.
 
 ### 3.4. Timeline / FSM
 
 ```json
 "timeline": [
-  { "mode": "forward",  "duration_ticks": 120, "label": "Einlass" },
-  { "mode": "backward", "duration_ticks": 120, "label": "Auslass" }
+  { "mode": "forward",  "duration_ticks": 120, "label": "Entry" },
+  { "mode": "backward", "duration_ticks": 120, "label": "Exit"  }
 ]
 ```
 
-Die Phasen werden **sequentiell** abgearbeitet. Nach der letzten Phase
-terminiert der Simulator.
+Phases are processed **sequentially**. The simulator terminates after the last phase.
 
-### 3.5. Steady-State
+### 3.5. Steady State
 
-Ein SOURCE-Sensor pendelt sich auf folgende Population ein:
+A SOURCE sensor converges to the following population:
 
 ```
 population_steady = auto_growth / flow_rate
 ```
 
-Begrenzt durch `max_capacity`. Das ist der wichtigste Hebel zum Tuning:
-**Zielhoehe erhoehen** -> `auto_growth` rauf **oder** `flow_rate` runter.
+Capped by `max_capacity`. This is the key tuning lever:
+**increase target level** → raise `auto_growth` **or** lower `flow_rate`.
 
 ---
 
-## 4. JSON-Telegramm
+## 4. JSON Telegram
 
-Pro Tick sendet jeder Sensor folgendes JSON per HTTP POST:
+Each sensor sends the following JSON per tick via HTTP POST:
 
 ```json
 {
@@ -111,32 +107,32 @@ Pro Tick sendet jeder Sensor folgendes JSON per HTTP POST:
 }
 ```
 
-### Felder
+### Fields
 
-| Feld          | Typ    | Beschreibung |
+| Field | Type | Description |
 |---------------|--------|--------------|
-| `lat`         | double | Breitengrad des Sensors (aus `config.json`) |
-| `long`        | double | Laengengrad des Sensors (aus `config.json`) |
-| `senderType`  | string | Fester Wert `"BTLE"` |
-| `deviceCount` | int    | Aktuell simulierte Geraete im Erfassungsbereich |
-| `measureTime` | string | ISO 8601 UTC-Zeitstempel (`YYYY-MM-DDTHH:MM:SSZ`) |
+| `lat` | double | Sensor latitude (from `config.json`) |
+| `long` | double | Sensor longitude (from `config.json`) |
+| `senderType` | string | Fixed value `"BTLE"` |
+| `deviceCount` | int | Currently simulated devices in detection area |
+| `measureTime` | string | ISO 8601 UTC timestamp (`YYYY-MM-DDTHH:MM:SSZ`) |
 
-### Sensor-Identifikation
+### Sensor Identification
 
-Das Telegramm enthaelt **keine** `sensor_id` - analog zum realen Scanner.
-Die Zuordnung erfolgt ueber die URL:
+The telegram contains **no** `sensor_id` — analogous to the real scanner.
+Assignment is done via the URL:
 
 ```json
-"target_backend_url_template": "https://api.dein-system.de/v1/sensors/{sensor_id}"
+"target_backend_url_template": "https://api.your-system.com/v1/sensors/{sensor_id}"
 ```
 
-Der Platzhalter `{sensor_id}` wird pro Sensor ersetzt.
+The placeholder `{sensor_id}` is replaced per sensor.
 
 ---
 
-## 5. Konfigurationsreferenz
+## 5. Configuration Reference
 
-### 5.1. Grundstruktur
+### 5.1. Basic Structure
 
 ```json
 {
@@ -147,108 +143,108 @@ Der Platzhalter `{sensor_id}` wird pro Sensor ersetzt.
 
 ### 5.2. `simulation_control`
 
-| Feld                           | Typ    | Wirkung |
+| Field | Type | Effect |
 |--------------------------------|--------|---------|
-| `interval_sec`                 | int    | Dauer eines Ticks. Beeinflusst Backend-Last und Transit-Aufloesung |
-| `target_backend_url_template`  | string | URL mit `{sensor_id}`-Platzhalter |
-| `timeline`                     | array  | Phasen in Reihenfolge |
+| `interval_sec` | int | Duration of one tick. Affects backend load and transit resolution |
+| `target_backend_url_template` | string | URL with `{sensor_id}` placeholder |
+| `timeline` | array | Phases in order |
 
-**Timeline-Eintrag:**
+**Timeline entry:**
 
-| Feld              | Typ    | Wirkung |
+| Field | Type | Effect |
 |-------------------|--------|---------|
-| `mode`            | string | `"forward"` oder `"backward"` |
-| `duration_ticks`  | int    | Phasenlaenge. Reale Dauer = `duration_ticks x interval_sec` |
-| `label`           | string | Nur fuer Logausgabe |
+| `mode` | string | `"forward"` or `"backward"` |
+| `duration_ticks` | int | Phase length. Real duration = `duration_ticks x interval_sec` |
+| `label` | string | For log output only |
 
-### 5.3. `sensors[]` - Statische Felder
+### 5.3. `sensors[]` — Static Fields
 
-| Feld           | Typ    | Wirkung |
+| Field | Type | Effect |
 |----------------|--------|---------|
-| `id`           | string | Eindeutige ID fuer URL und `targets`-Referenzen |
-| `lat`, `lon`   | double | WGS84-Koordinaten, nur fuer Telegramm |
-| `max_capacity` | int    | **Harte Kappung** von `deviceCount` |
+| `id` | string | Unique ID for URL and `targets` references |
+| `lat`, `lon` | double | WGS84 coordinates, for telegram only |
+| `max_capacity` | int | **Hard cap** for `deviceCount` |
 
 ### 5.4. `sensors[].forward` / `sensors[].backward`
 
-| Feld               | Typ    | Wirkung |
+| Field | Type | Effect |
 |--------------------|--------|---------|
-| `role`             | string | `SOURCE` \| `TRANSIT` \| `SINK` |
-| `targets`          | array  | IDs der Nachfolger-Sensoren (bei mehreren: gleichmaessige Aufteilung) |
-| `travel_time_sec`  | int    | Verzoegerung zwischen Verlassen hier und Ankunft beim Target |
-| `flow_rate`        | double | `[0.0 .. 1.0]` - Anteil der Population pro Tick |
-| `auto_growth`      | int    | Neue Einheiten pro Tick (nur SOURCE relevant) |
+| `role` | string | `SOURCE` \| `TRANSIT` \| `SINK` |
+| `targets` | array | IDs of downstream sensors (multiple: evenly distributed) |
+| `travel_time_sec` | int | Delay between leaving here and arriving at target |
+| `flow_rate` | double | `[0.0 .. 1.0]` — fraction of population per tick |
+| `auto_growth` | int | New units per tick (relevant for SOURCE only) |
 
-Weitere Details und Wechselwirkungen: siehe **`CONFIG.md`**.
+Further details and interactions: see **`CONFIG.md`**.
 
 ---
 
-## 6. Tuning-Kochbuch
+## 6. Tuning Cookbook
 
-### 6.1. Hoehere Zielpopulation
+### 6.1. Higher Target Population
 
 ```
 population_steady = auto_growth / flow_rate
 ```
 
-| Ziel  | `auto_growth` | `flow_rate` | `max_capacity` min. |
+| Goal | `auto_growth` | `flow_rate` | `max_capacity` min. |
 |-------|---------------|-------------|---------------------|
-| 500   | 100           | 0.20        | 800                 |
-| 1000  | 200           | 0.20        | 1500                |
-| 2000  | 200           | 0.10        | 3000                |
-| 5000  | 250           | 0.05        | 7000                |
+| 500 | 100 | 0.20 | 800 |
+| 1000 | 200 | 0.20 | 1500 |
+| 2000 | 200 | 0.10 | 3000 |
+| 5000 | 250 | 0.05 | 7000 |
 
-### 6.2. Schnellerer Aufwuchs
+### 6.2. Faster Growth
 
-Groessere `auto_growth` -> Population waechst pro Tick schneller. Achtung:
-`max_capacity` muss ausreichend hoch sein, sonst wird der Zuwachs gekappt.
+Larger `auto_growth` → population grows faster per tick. Note:
+`max_capacity` must be sufficiently high, otherwise growth is capped.
 
-### 6.3. Langsameres Abklingen (SINK)
+### 6.3. Slower Drain (SINK)
 
-Niedrigere `flow_rate` verlaengert die Verweildauer. Halbwertszeit:
+Lower `flow_rate` extends the dwell time. Half-life:
 
 ```
-t_half = ln(2) / ln(1 / (1 - flow_rate))   [in Ticks]
+t_half = ln(2) / ln(1 / (1 - flow_rate))   [in ticks]
 ```
 
-| `flow_rate` | Halbwertszeit |
+| `flow_rate` | Half-life |
 |-------------|---------------|
-| 0.05        | ~13.5 Ticks   |
-| 0.10        | ~6.6 Ticks    |
-| 0.30        | ~1.9 Ticks    |
-| 0.50        | 1 Tick        |
+| 0.05 | ~13.5 ticks |
+| 0.10 | ~6.6 ticks |
+| 0.30 | ~1.9 ticks |
+| 0.50 | 1 tick |
 
-### 6.4. Zwei Wege zu einem Ziel, Rueckweg ueber beide
+### 6.4. Two Paths to One Target, Return via Both
 
-Forward: `SNSR-A` und `SNSR-B` beide mit `targets: ["SNSR-MERGE"]`.
-Backward: `SNSR-MERGE` mit `targets: ["SNSR-A", "SNSR-B"]` -
-Outflow wird **50:50** aufgeteilt.
+Forward: `SNSR-A` and `SNSR-B` both with `targets: ["SNSR-MERGE"]`.
+Backward: `SNSR-MERGE` with `targets: ["SNSR-A", "SNSR-B"]` —
+outflow is split **50:50**.
 
 ---
 
 ## 7. Build & Installation
 
-### 7.1. Abhaengigkeiten installieren (Debian/Raspberry Pi OS)
+### 7.1. Install Dependencies (Debian/Raspberry Pi OS)
 
 ```bash
 sudo apt install build-essential libcurl4-openssl-dev nlohmann-json3-dev
 ```
 
-### 7.2. Kompilieren
+### 7.2. Compile
 
 ```bash
 make
 ```
 
-Erzeugt das Binary `btle_simulator` im Projektordner.
+Creates the binary `btle_simulator` in the project folder.
 
-### 7.3. Lokal ausfuehren
+### 7.3. Run Locally
 
 ```bash
 ./btle_simulator config.json
 ```
 
-### 7.4. Systemweit installieren (mit systemd-Service)
+### 7.4. System-wide Installation (with systemd Service)
 
 ```bash
 sudo make install
@@ -257,34 +253,33 @@ sudo systemctl enable --now btle-simulator
 ```
 
 - Binary: `/usr/local/bin/btle_simulator`
-- Config: `/etc/btle-simulator/config.json` (wird bei Re-Install nicht ueberschrieben)
-- Unit:   `/etc/systemd/system/btle-simulator.service`
+- Config: `/etc/btle-simulator/config.json` (not overwritten on re-install)
+- Unit: `/etc/systemd/system/btle-simulator.service`
 
-### 7.5. Deinstallation
+### 7.5. Uninstall
 
 ```bash
 sudo make uninstall
 ```
 
-Config unter `/etc/btle-simulator` bleibt erhalten und muss bei
-Bedarf manuell entfernt werden.
+The config under `/etc/btle-simulator` is retained and must be removed manually if needed.
 
 ---
 
-## 8. systemd-Service
+## 8. systemd Service
 
-Die Unit `btle-simulator.service` laeuft unter `nobody:nogroup`
-mit umfangreichem Sandboxing:
+The unit `btle-simulator.service` runs under `nobody:nogroup`
+with extensive sandboxing:
 
-- `ProtectSystem=strict` - kein Schreibzugriff auf System-Pfade
+- `ProtectSystem=strict` — no write access to system paths
 - `PrivateTmp=true`, `PrivateDevices=true`
-- `RestrictAddressFamilies=AF_INET AF_INET6` - nur IP-Sockets
-- `MemoryDenyWriteExecute=true` - kein dynamischer Code
+- `RestrictAddressFamilies=AF_INET AF_INET6` — IP sockets only
+- `MemoryDenyWriteExecute=true` — no dynamic code
 - `NoNewPrivileges=true`
 
-Neustart bei Crash nach 5 s (`Restart=on-failure`, `RestartSec=5`).
+Restart on crash after 5 s (`Restart=on-failure`, `RestartSec=5`).
 
-### Statuspruefung
+### Status Check
 
 ```bash
 sudo systemctl status btle-simulator
@@ -293,41 +288,41 @@ sudo journalctl -u btle-simulator -f
 
 ---
 
-## 9. Verhalten im Betrieb
+## 9. Runtime Behaviour
 
-### 9.1. Konsolen-Log (stdout)
+### 9.1. Console Log (stdout)
 
-Pro Tick eine Zeile je Sensor:
+One line per sensor per tick:
 
 ```
-[SIM] Phase: Morgendlicher Einlass (mode=forward, ticks=120)
-[TICK 0] SNSR-01-PARKING          count=10    -> https://api.dein-system.de/v1/sensors/SNSR-01-PARKING
-[TICK 0] SNSR-02-CORRIDOR         count=0     -> https://api.dein-system.de/v1/sensors/SNSR-02-CORRIDOR
+[SIM] Phase: Morning Entry (mode=forward, ticks=120)
+[TICK 0] SNSR-01-PARKING          count=10    -> https://api.your-system.com/v1/sensors/SNSR-01-PARKING
+[TICK 0] SNSR-02-CORRIDOR         count=0     -> https://api.your-system.com/v1/sensors/SNSR-02-CORRIDOR
 ...
 ```
 
-### 9.2. Fehlerbehandlung
+### 9.2. Error Handling
 
-- HTTP-Fehler werden auf `stderr` geloggt (`[HTTP] <url> -> <libcurl-msg>`)
-  und brechen die Simulation **nicht** ab.
-- Config-Fehler beim Start -> Exit-Code `1`.
-- Laufzeitfehler -> Exit-Code `2`.
-- `SIGINT` / `SIGTERM` -> sauberer Stopp zwischen Ticks, Exit `0`.
+- HTTP errors are logged to `stderr` (`[HTTP] <url> -> <libcurl-msg>`)
+  and do **not** abort the simulation.
+- Config errors at startup → exit code `1`.
+- Runtime errors → exit code `2`.
+- `SIGINT` / `SIGTERM` → clean stop between ticks, exit `0`.
 
-### 9.3. Nebenlaeufigkeit
+### 9.3. Concurrency
 
-HTTP-POSTs laufen auf detached `std::thread`s. Bei sehr vielen Sensoren
-(>100) und niedrigem `interval_sec` kann die Thread-Anzahl kurzzeitig
-ansteigen. Bei Bedarf spaeter auf eine Thread-Pool-Loesung umstellen.
+HTTP POSTs run on detached `std::thread`s. With very many sensors
+(>100) and low `interval_sec` the thread count may briefly spike.
+Switch to a thread-pool solution later if needed.
 
 ---
 
-## 10. Wissenschaftliche Grundlagen
+## 10. Scientific Background
 
-Die Simulation basiert auf etablierten Modellen aus Verkehrsforschung und
-Funktechnik. Weiterfuehrende Literatur:
+The simulation is based on established models from traffic research and
+radio engineering. Further reading:
 
-### 10.1. Personenfluss (Pedestrian Dynamics)
+### 10.1. Pedestrian Dynamics
 
 - **Helbing, D. & Molnar, P. (1995):** *Social force model for pedestrian
   dynamics.* Physical Review E.
@@ -341,19 +336,18 @@ Funktechnik. Weiterfuehrende Literatur:
 - **Gomez, C. et al. (2012):** *Overview and Evaluation of Bluetooth Low
   Energy: An Emerging Low-Power Wireless Technology.* Sensors.
 
-### 10.3. Warteschlangentheorie (Queueing Theory)
+### 10.3. Queueing Theory
 
 - **Kendall, D. G. (1953):** *Stochastic Processes Occurring in the Theory
   of Queues and their Analysis by the Method of the Imbedded Markov Chain.*
   Annals of Mathematical Statistics.
 
-
 ---
 
-## 11. Roadmap / Offene Punkte
+## 11. Roadmap / Open Items
 
-- [ ] Gewichtete Target-Aufteilung (aktuell gleichmaessig)
-- [ ] Optionaler Jitter / RSSI-Rauschen fuer realistischere `deviceCount`-Varianz
-- [ ] Metrics-Endpoint (Prometheus) fuer Live-Beobachtung der Populationen
-- [ ] Persistente Transit-Queue fuer saubere Fortsetzung nach Neustart
-- [ ] Config-Hot-Reload via `SIGHUP`
+- [ ] Weighted target distribution (currently even split)
+- [ ] Optional jitter / RSSI noise for more realistic `deviceCount` variance
+- [ ] Metrics endpoint (Prometheus) for live population monitoring
+- [ ] Persistent transit queue for clean continuation after restart
+- [ ] Config hot-reload via `SIGHUP`

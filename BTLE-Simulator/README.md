@@ -1,15 +1,15 @@
-# BTLE-Crowd-Simulator
+# BTLE Crowd Simulator
 
-C++-Implementierung eines BTLE-Crowd-Simulators.
-Simuliert Personenströme über ein gerichtetes Sensor-Netz
-(SOURCE → TRANSIT → SINK) und sendet pro Tick ein JSON-Telegramm
-per HTTP-POST an ein Backend.
+C++ implementation of a BTLE crowd simulator.
+Simulates crowd flows through a directed sensor network
+(SOURCE → TRANSIT → SINK) and sends a JSON telegram per tick
+via HTTP POST to a backend.
 
-## Abhängigkeiten
+## Dependencies
 
-- C++17 Compiler (`g++` oder `clang++`)
-- [libcurl](https://curl.se/libcurl/) (`libcurl4-openssl-dev` auf Debian/Ubuntu)
-- [nlohmann/json](https://github.com/nlohmann/json) (`nlohmann-json3-dev` auf Debian/Ubuntu)
+- C++17 compiler (`g++` or `clang++`)
+- [libcurl](https://curl.se/libcurl/) (`libcurl4-openssl-dev` on Debian/Ubuntu)
+- [nlohmann/json](https://github.com/nlohmann/json) (`nlohmann-json3-dev` on Debian/Ubuntu)
 - pthreads
 
 ### Debian / Ubuntu / Raspberry Pi OS
@@ -30,15 +30,15 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-curl mingw-w64-x86_64-nlohmann-j
 make
 ```
 
-Ausführen:
+Run:
 
 ```bash
 ./btle_simulator config.json
 ```
 
-## JSON-Telegramm
+## JSON Telegram
 
-Pro Tick sendet jeder Sensor folgendes Paket:
+Each sensor sends the following packet per tick:
 
 ```json
 {
@@ -50,38 +50,37 @@ Pro Tick sendet jeder Sensor folgendes Paket:
 }
 ```
 
-Die Sensor-Identifikation erfolgt über die Ziel-URL
-(`target_backend_url_template` mit Platzhalter `{sensor_id}`).
+Sensor identification is done via the target URL
+(`target_backend_url_template` with placeholder `{sensor_id}`).
 
-## Konfiguration (`config.json`)
+## Configuration (`config.json`)
 
-| Feld                           | Bedeutung |
+| Field | Meaning |
 |--------------------------------|-----------|
-| `simulation_control.interval_sec` | Länge eines Ticks in Sekunden |
-| `target_backend_url_template` | URL-Schablone, `{sensor_id}` wird pro Sensor ersetzt |
-| `timeline[]`                  | Abfolge der Modi (`forward` / `backward`) in Ticks |
-| `sensors[].max_capacity`      | Max. simultan erfassbare Geräte |
-| `sensors[].forward|backward`  | Rolle & Flussparameter pro Richtung |
+| `simulation_control.interval_sec` | Length of one tick in seconds |
+| `target_backend_url_template` | URL template, `{sensor_id}` is replaced per sensor |
+| `timeline[]` | Sequence of modes (`forward` / `backward`) in ticks |
+| `sensors[].max_capacity` | Max. simultaneously detectable devices |
+| `sensors[].forward|backward` | Role & flow parameters per direction |
 
-### Rollen
+### Roles
 
-| Rolle     | Wirkung pro Tick |
+| Role | Effect per tick |
 |-----------|------------------|
-| `SOURCE`  | `auto_growth` neue Einheiten + `flow_rate` × Population → Targets |
-| `TRANSIT` | `flow_rate` × Population → Targets (FIFO-Queue mit `travel_time_sec`) |
-| `SINK`    | `flow_rate` × Population entfernt (Austritt aus Erfassungsbereich) |
+| `SOURCE` | `auto_growth` new units + `flow_rate` × population → targets |
+| `TRANSIT` | `flow_rate` × population → targets (FIFO queue with `travel_time_sec`) |
+| `SINK` | `flow_rate` × population removed (exit from detection area) |
 
-## Architektur
+## Architecture
 
 ```
-main.cpp          Einstiegspunkt, Signal-Handling
-config.cpp/h      JSON-Parser (nlohmann/json) → SimulationConfig
-simulator.cpp/h   Tick-Loop, Rollenlogik, Transit-Warteschlangen
-http_client.cpp/h libcurl-Wrapper, async POST via detached std::thread
-types.h           Datenstrukturen (Sensor, RoleConfig, TimelinePhase …)
+main.cpp          Entry point, signal handling
+config.cpp/h      JSON parser (nlohmann/json) → SimulationConfig
+simulator.cpp/h   Tick loop, role logic, transit queues
+http_client.cpp/h libcurl wrapper, async POST via detached std::thread
+types.h           Data structures (Sensor, RoleConfig, TimelinePhase …)
 ```
 
-## Abbruch
+## Stopping
 
-`SIGINT` (Ctrl+C) oder `SIGTERM` stoppt die Simulation sauber
-zwischen zwei Ticks.
+`SIGINT` (Ctrl+C) or `SIGTERM` stops the simulation cleanly between two ticks.

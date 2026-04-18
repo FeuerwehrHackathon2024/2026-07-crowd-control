@@ -1,25 +1,25 @@
-# BTLE-Scanner fuer Raspberry Pi 5 (Debian)
+# BTLE-Scanner for Raspberry Pi 5 (Debian)
 
-C++-Portierung des ESP32-Projekts. Nutzt das integrierte Bluetooth des Pi 5 via **BlueZ HCI** und sendet die Anzahl eindeutiger BTLE-Stationen per HTTP POST.
+C++ port of the ESP32 project. Uses the Pi 5's integrated Bluetooth via **BlueZ HCI** and sends the number of unique BTLE stations via HTTP POST.
 
-## 1. Abhaengigkeiten installieren
+## 1. Install Dependencies
 
 ```bash
 sudo apt update
 sudo apt install -y build-essential libbluetooth-dev libcurl4-openssl-dev
 ```
 
-## 2. Konfiguration
+## 2. Configuration
 
-In `btle_scanner.cpp` anpassen:
+Edit the constants in `btle_scanner.cpp`:
 
 ```cpp
-static const char* SERVER_URL   = "http://deine-url.de/endpoint";
+static const char* SERVER_URL   = "http://your-server.com/endpoint";
 static const int   SCAN_SECONDS = 5;
 static const int   HCI_DEV_ID   = 0;    // hci0
 ```
 
-Pruefe mit `hciconfig`, welcher HCI-Adapter auf dem Pi verfuegbar ist:
+Check which HCI adapter is available on the Pi using `hciconfig`:
 
 ```bash
 hciconfig -a
@@ -32,26 +32,26 @@ cd BTLE-Scanner
 make
 ```
 
-## 4. Ausfuehren
+## 4. Run
 
-### Variante A: als root
+### Option A: as root
 ```bash
 sudo ./btle_scanner
 ```
 
-### Variante B: ohne root via Capabilities
+### Option B: without root via Capabilities
 ```bash
 make setcap
 ./btle_scanner
 ```
 
-## 5. Als systemd-Service installieren
+## 5. Install as systemd Service
 
 ```bash
-# Binary nach /usr/local/bin installieren inkl. Capabilities
+# Install binary to /usr/local/bin including capabilities
 make install
 
-# Service-Unit installieren und aktivieren
+# Install and enable the service unit
 sudo cp btle-scanner.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now btle-scanner.service
@@ -61,7 +61,7 @@ systemctl status btle-scanner.service
 journalctl -u btle-scanner.service -f
 ```
 
-## 6. JSON-Telegramm
+## 6. JSON Telegram
 
 ```json
 {
@@ -75,9 +75,9 @@ journalctl -u btle-scanner.service -f
 
 ## Troubleshooting
 
-| Problem | Loesung |
+| Problem | Solution |
 |--------|---------|
-| `hci_open_dev: Permission denied` | `sudo` oder `make setcap` verwenden |
-| `hci_open_dev: No such device` | `hciconfig hci0 up` oder `HCI_DEV_ID` anpassen |
-| Bluetooth gesperrt | `rfkill unblock bluetooth` |
-| Immer 0 Geraete | `bluetoothctl` schliessen (blockiert HCI-Scan) |
+| `hci_open_dev: Permission denied` | Use `sudo` or `make setcap` |
+| `hci_open_dev: No such device` | Run `hciconfig hci0 up` or adjust `HCI_DEV_ID` |
+| Bluetooth blocked | `rfkill unblock bluetooth` |
+| Always 0 devices | Close `bluetoothctl` (it blocks the HCI scan) |
