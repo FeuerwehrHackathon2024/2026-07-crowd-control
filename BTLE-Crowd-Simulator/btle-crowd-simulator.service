@@ -1,0 +1,35 @@
+[Unit]
+Description=BTLE Crowd Simulator - Population Flow Telemetry Generator
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/btle_crowd_simulator /etc/btle-crowd-simulator/config.json
+WorkingDirectory=/etc/btle-crowd-simulator
+Restart=on-failure
+RestartSec=5
+
+# Unprivilegierter Lauf - der Simulator braucht nur Netzwerk-Zugriff
+User=nobody
+Group=nogroup
+NoNewPrivileges=true
+
+# Hardening
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+
+# Config-Verzeichnis lesbar halten
+ReadOnlyPaths=/etc/btle-crowd-simulator
+
+[Install]
+WantedBy=multi-user.target

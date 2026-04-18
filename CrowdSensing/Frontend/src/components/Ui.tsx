@@ -41,6 +41,7 @@ export function Input(props:
         buttonText?: string;
         buttonIcon?: string;
         buttonType?: number;
+        showStepper?: boolean;
         keyFilter?: string[];
         spin?: boolean;
         onChange?: (e: any) => void,
@@ -407,8 +408,8 @@ export function Input(props:
                                 .join("");
                             handleChange(filtered);
                         }} />
-                    <Button style={{ borderRadius: "1em", borderTopLeftRadius: "0", borderBottomLeftRadius: "0", borderLeft: props.buttonText || props.buttonIcon ? hasFocus ? "2px solid var(--input-border-focused)" : "2px solid var(--input-border)" : "none", background: "transparent" }} iconName="remove" bntType={5} onClick={() => handleChange(String(Number(localValue || "0") - 1))} />
-                    <Button style={{ borderRadius: "1em", borderTopLeftRadius: "0", borderBottomLeftRadius: "0", borderLeft: props.buttonText || props.buttonIcon ? hasFocus ? "2px solid var(--input-border-focused)" : "2px solid var(--input-border)" : "none", background: "transparent" }} iconName="add" bntType={5} onClick={() => handleChange(String(Number(localValue || "0") + 1))} />
+                    {props.showStepper !== false ? <Button style={{ borderRadius: "1em", borderTopLeftRadius: "0", borderBottomLeftRadius: "0", borderLeft: props.buttonText || props.buttonIcon ? hasFocus ? "2px solid var(--input-border-focused)" : "2px solid var(--input-border)" : "none", background: "transparent" }} iconName="remove" bntType={5} onClick={() => handleChange(String(Number(localValue || "0") - 1))} /> : null}
+                    {props.showStepper !== false ? <Button style={{ borderRadius: "1em", borderTopLeftRadius: "0", borderBottomLeftRadius: "0", borderLeft: props.buttonText || props.buttonIcon ? hasFocus ? "2px solid var(--input-border-focused)" : "2px solid var(--input-border)" : "none", background: "transparent" }} iconName="add" bntType={5} onClick={() => handleChange(String(Number(localValue || "0") + 1))} /> : null}
                     {props.buttonText || props.buttonIcon ? <Button style={{ borderRadius: "1em", borderTopLeftRadius: "0", borderBottomLeftRadius: "0", borderLeft: props.buttonText || props.buttonIcon ? hasFocus ? "2px solid var(--input-border-focused)" : "2px solid var(--input-border)" : "none", background: "transparent" }} text={props.buttonText} iconName={props.buttonIcon} bntType={5} onClick={props.onClick} spin={props.spin} /> : null}
                 </div>
             );

@@ -22,9 +22,11 @@ export type SenderTypeRangeCreate = Omit<SenderTypeRange, 'id'>;
 class Data {
     apiBasePath = "https://localhost:7240/api/v1/";
 
-    private async handleFetch<T>(url: string, init?: RequestInit, loadingEvent = 'loading'): Promise<T> {
+    private async handleFetch<T>(url: string, init?: RequestInit, loadingEvent: string | false = 'loading'): Promise<T> {
         try {
-            Event.dispatch(loadingEvent, { status: true });
+            if (loadingEvent) {
+                Event.dispatch(loadingEvent, { status: true });
+            }
             const response = await fetch(url, init);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -41,7 +43,9 @@ class Data {
 
             return await response.text() as T;
         } finally {
-            Event.dispatch(loadingEvent, { status: false });
+            if (loadingEvent) {
+                Event.dispatch(loadingEvent, { status: false });
+            }
         }
     }
 
@@ -56,7 +60,7 @@ class Data {
             params.set('to', to);
         }
 
-        return await this.handleFetch<PositionCount[]>(this.apiBasePath + `PositionCount/by-time?${params.toString()}`);
+        return await this.handleFetch<PositionCount[]>(this.apiBasePath + `PositionCount/by-time?${params.toString()}`, undefined, false);
     }
 
     async getPositionCountById(id: number): Promise<PositionCount> {

@@ -1,0 +1,47 @@
+{
+  "simulation_control": {
+    "interval_sec": 5,
+    "target_backend_url_template": "http://192.168.17.251:5146/api/v1/positioncount",
+    "timeline": [
+      { "mode": "forward",  "duration_ticks": 120, "label": "Morgendlicher Einlass" },
+      { "mode": "backward", "duration_ticks": 120, "label": "Abendlicher Abfluss"   }
+    ]
+  },
+  "sensors": [
+    {
+      "id": "WIESN-UBAHN",
+      "lat": 48.13596, "lon": 11.55267,
+      "max_capacity": 2000,
+      "forward":  { "role": "SOURCE", "targets": ["WIESN-WEG"], "travel_time_sec": 15, "flow_rate": 0.20, "auto_growth": 200 },
+      "backward": { "role": "SINK",   "targets": [],                    "travel_time_sec": 0,  "flow_rate": 0.50, "auto_growth": 0  }
+    },
+    {
+      "id": "WIESN-UBAHN2",
+      "lat": 48.129369, "lon": 11.558707,
+      "max_capacity": 2000,
+      "forward":  { "role": "SOURCE", "targets": ["WIESN-WEG2"], "travel_time_sec": 15, "flow_rate": 0.20, "auto_growth": 200 },
+      "backward": { "role": "SINK",   "targets": [],                    "travel_time_sec": 0,  "flow_rate": 0.50, "auto_growth": 0  }
+    },
+    {
+      "id": "WIESN-WEG",
+      "lat": 48.136100, "lon": 11.549322,
+      "max_capacity": 10000,
+      "forward":  { "role": "TRANSIT", "targets": ["WIESN-FEST"],  "travel_time_sec": 20, "flow_rate": 0.15 },
+      "backward": { "role": "TRANSIT", "targets": ["WIESN-UBAHN"],  "travel_time_sec": 20, "flow_rate": 0.15 }
+    },
+    {
+      "id": "WIESN-WEG2",
+      "lat": 48.130167, "lon": 11.553406,
+      "max_capacity": 10000,
+      "forward":  { "role": "TRANSIT", "targets": ["WIESN-FEST"],  "travel_time_sec": 20, "flow_rate": 0.15 },
+      "backward": { "role": "TRANSIT", "targets": ["WIESN-UBAHN2"],  "travel_time_sec": 20, "flow_rate": 0.15 }
+    },
+    {
+      "id": "WIESN-FEST",
+      "lat": 48.1312, "lon": 11.5495,
+      "max_capacity": 50000,
+      "forward":  { "role": "SINK",   "targets": [],                    "travel_time_sec": 0,  "flow_rate": 0.30, "auto_growth": 0  },
+      "backward": { "role": "SOURCE", "targets": ["WIESN-WEG", "WIESN-WEG2"],  "travel_time_sec": 10, "flow_rate": 0.30, "auto_growth": 50 }
+    }
+  ]
+}
