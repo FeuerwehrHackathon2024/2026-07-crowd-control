@@ -10,7 +10,7 @@ WorkingDirectory=/etc/btle-simulator
 Restart=on-failure
 RestartSec=5
 
-# Unprivilegierter Lauf - der Simulator braucht nur Netzwerk-Zugriff
+# Unprivileged run - the simulator only needs network access
 User=nobody
 Group=nogroup
 NoNewPrivileges=true
@@ -28,7 +28,7 @@ RestrictNamespaces=true
 LockPersonality=true
 MemoryDenyWriteExecute=true
 
-# Config-Verzeichnis lesbar halten
+# Keep config directory readable
 ReadOnlyPaths=/etc/btle-simulator
 
 [Install]

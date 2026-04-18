@@ -41,7 +41,7 @@ void Simulator::run() {
 }
 
 void Simulator::apply_tick_(const std::string& mode) {
-    // 1. Ankommende Einheiten aus Transit-Warteschlangen in current_count überführen
+    // 1. Move arriving units from transit queues into current_count
     for (auto& s : cfg_.sensors) {
         while (!s.incoming.empty() && s.incoming.front().arrival_tick <= tick_) {
             s.current_count += s.incoming.front().amount;
@@ -50,7 +50,7 @@ void Simulator::apply_tick_(const std::string& mode) {
         if (s.current_count > s.max_capacity) s.current_count = s.max_capacity;
     }
 
-    // 2. Rollenverhalten anwenden
+    // 2. Apply role behaviour
     for (auto& s : cfg_.sensors) {
         const RoleConfig& r = s.role_for(mode);
 

@@ -35,12 +35,12 @@ install: $(TARGET)
 	@if [ ! -f $(DESTDIR)$(CONFDIR)/config.json ]; then \
 	  install -m 0644 config.json $(DESTDIR)$(CONFDIR)/config.json; \
 	else \
-	  echo "[skip] $(DESTDIR)$(CONFDIR)/config.json existiert bereits"; \
+	  echo "[skip] $(DESTDIR)$(CONFDIR)/config.json already exists"; \
 	fi
 	install -d $(DESTDIR)$(UNITDIR)
 	install -m 0644 $(UNIT) $(DESTDIR)$(UNITDIR)/$(UNIT)
 	@echo ""
-	@echo "Install abgeschlossen. Aktivieren mit:"
+	@echo "Installation complete. Enable with:"
 	@echo "  sudo systemctl daemon-reload"
 	@echo "  sudo systemctl enable --now $(UNIT)"
 
@@ -48,7 +48,7 @@ uninstall:
 	-systemctl disable --now $(UNIT) 2>/dev/null || true
 	rm -f $(DESTDIR)$(BINDIR)/$(TARGET)
 	rm -f $(DESTDIR)$(UNITDIR)/$(UNIT)
-	@echo "Config unter $(CONFDIR) bleibt erhalten. Manuell entfernen falls gewuenscht."
+	@echo "Config at $(CONFDIR) is preserved. Remove manually if desired."
 	systemctl daemon-reload || true
 
 .PHONY: all clean run install uninstall
